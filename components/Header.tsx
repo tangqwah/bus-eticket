@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const BKS_LOGO = "https://www.figma.com/api/mcp/asset/8e69ea32-6f68-40e5-ac2c-47e43d378771";
+const BKS_LOGO = "/assets/bks-logo.png";
 
 export default function Header() {
   return (

@@ -3,7 +3,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
 
-const BKS_LOGO = "https://www.figma.com/api/mcp/asset/8e69ea32-6f68-40e5-ac2c-47e43d378771";
+const BKS_LOGO = "/assets/bks-logo.png";
 
 const BOOKING_NO = "BKS-7K4Q28";
 

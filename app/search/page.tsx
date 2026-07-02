@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
 
-const BUS_LOGO = "https://www.figma.com/api/mcp/asset/2b5d1891-0861-4a7c-b3ba-956caa50f3bf";
+const BUS_LOGO = "/assets/bks-bus-logo.png";
 
 const BUSES = [
   { id: 1, route: "กรุงเทพฯ-ขอนแก่น", type: "รถด่วน", typeColor: "#f59e0b", dep: "09:00", arr: "15:30", dur: "6ชม. 30น.", seats: 12, price: 427 },

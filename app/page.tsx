@@ -3,8 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 
-const HERO_BG = "https://www.figma.com/api/mcp/asset/e6b33e37-ed9c-4ddf-9480-e7e49358034e";
-const BKS_LOGO = "https://www.figma.com/api/mcp/asset/8e69ea32-6f68-40e5-ac2c-47e43d378771";
+const HERO_BG = "/assets/hero-bg.jpg";
+const BKS_LOGO = "/assets/bks-logo.png";
 
 export default function Home() {
   const router = useRouter();
