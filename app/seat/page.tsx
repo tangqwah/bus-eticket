@@ -69,11 +69,8 @@ export default function SeatPage() {
     if (isBooked) {
       cls = "bg-[#f3f4f6] border-[#e5e7eb] text-[#9ca3af] cursor-not-allowed";
       content = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>;
-    } else if (isOwnedByActive) {
-      cls = "bg-[#cd416e] border-[#cd416e] text-white";
-      content = <span className="text-[13px] font-bold">{owner + 1}</span>;
-    } else if (isOwnedByOther) {
-      cls = "bg-[#171b82] border-[#171b82] text-white cursor-default";
+    } else if (isOwnedByActive || isOwnedByOther) {
+      cls = `bg-[#cd416e] border-[#cd416e] text-white${isOwnedByOther ? " cursor-default" : ""}`;
       content = <span className="text-[13px] font-bold">{owner + 1}</span>;
     } else {
       cls = "bg-white border-[#079455] text-[#079455] hover:bg-[#f0fdf4]";
@@ -116,8 +113,7 @@ export default function SeatPage() {
               {[
                 { cls: "border-[#079455] bg-white", label: "ว่าง" },
                 { cls: "bg-[#f3f4f6] border-[#e5e7eb]", label: "ถูกจองแล้ว" },
-                { cls: "bg-[#cd416e] border-[#cd416e]", label: "ที่นั่งที่กำลังเลือก" },
-                { cls: "bg-[#171b82] border-[#171b82]", label: "ผู้โดยสารอื่น" },
+                { cls: "bg-[#cd416e] border-[#cd416e]", label: "ที่นั่งที่เลือก" },
               ].map(({ cls, label }) => (
                 <div key={label} className="flex items-center gap-2">
                   <div className={`w-7 h-7 rounded border-2 ${cls}`} />
@@ -207,7 +203,7 @@ export default function SeatPage() {
                     {/* Seat badge */}
                     <div className={`text-[14px] font-bold px-2.5 py-1 rounded-lg shrink-0 ${
                       hasSeat
-                        ? isActive ? "bg-[#cd416e] text-white" : "bg-[#171b82] text-white"
+                        ? "bg-[#cd416e] text-white"
                         : "bg-[#f3f4f6] text-[#9ca3af] text-[12px]"
                     }`}>
                       {hasSeat ? seats[i] : "—"}
