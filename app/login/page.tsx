@@ -41,15 +41,27 @@ function IconFacebook() {
   );
 }
 
+const TEST_USERS = [
+  { username: "testuser", password: "test1234" },
+];
+
 export default function LoginPage() {
   const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/");
+    const valid = TEST_USERS.some(u => u.username === username && u.password === password);
+    if (!valid) {
+      setError("รหัสผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง");
+      return;
+    }
+    setError("");
+    localStorage.setItem("bks_user", JSON.stringify({ username, name: "นายทดสอบ ระบบ", email: "testuser@example.com", phone: "0812345678" }));
+    router.push("/profile");
   };
 
   return (
@@ -179,6 +191,10 @@ export default function LoginPage() {
                     />
                   </div>
                 </div>
+
+                {error && (
+                  <p className="text-[14px] text-[#f04438] bg-[#fef3f2] border border-[#fecdca] rounded-lg px-3 py-2">{error}</p>
+                )}
 
                 {/* Remember me */}
                 <label className="flex items-center gap-3 cursor-pointer">
