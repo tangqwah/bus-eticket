@@ -45,14 +45,40 @@ const NAV = [
       </svg>
     ),
   },
+  {
+    href: "/backoffice/members",
+    label: "สมาชิก",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+        <path d="M16 3.13a4 4 0 010 7.75"/>
+      </svg>
+    ),
+  },
+  {
+    href: "/backoffice/settings/discounts",
+    label: "ตั้งค่า",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+      </svg>
+    ),
+  },
 ];
 
-const PAGE_TITLES: Record<string, string> = {
-  "/backoffice/dashboard": "แดชบอร์ด",
-  "/backoffice/trips": "เที่ยวรถและกำหนดการ",
-  "/backoffice/bookings": "การจองทั้งหมด",
-  "/backoffice/routes": "จัดการเส้นทาง",
-};
+function getPageTitle(pathname: string): string {
+  if (pathname === "/backoffice/dashboard") return "แดชบอร์ด";
+  if (pathname === "/backoffice/trips") return "เที่ยวรถและกำหนดการ";
+  if (pathname === "/backoffice/bookings") return "การจองทั้งหมด";
+  if (pathname === "/backoffice/routes") return "จัดการเส้นทาง";
+  if (pathname === "/backoffice/members") return "จัดการสมาชิก";
+  if (pathname.startsWith("/backoffice/members/")) return "รายละเอียดสมาชิก";
+  if (pathname.startsWith("/backoffice/settings")) return "ตั้งค่า";
+  return "ระบบหลังบ้าน";
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -72,7 +98,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   if (!admin) return null;
 
-  const pageTitle = PAGE_TITLES[pathname] ?? "ระบบหลังบ้าน";
+  const pageTitle = getPageTitle(pathname);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -92,7 +118,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
           {NAV.map(item => {
-            const active = pathname === item.href || pathname.startsWith(item.href + "/");
+            const activePrefix = item.href === "/backoffice/settings/discounts" ? "/backoffice/settings" : item.href;
+            const active = pathname === item.href || pathname.startsWith(activePrefix + "/");
             return (
               <Link
                 key={item.href}
