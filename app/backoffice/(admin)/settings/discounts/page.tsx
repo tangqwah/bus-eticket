@@ -4,12 +4,18 @@ import { useState, useEffect } from "react";
 type Settings = {
   employeeDiscount: number;
   officialDiscount: number;
+  seniorDiscount: number;
+  studentDiscount: number;
+  disabledDiscount: number;
   renewalReminderDays: number;
 };
 
 const DEFAULTS: Settings = {
   employeeDiscount: 50,
   officialDiscount: 50,
+  seniorDiscount: 30,
+  studentDiscount: 30,
+  disabledDiscount: 40,
   renewalReminderDays: 30,
 };
 
@@ -144,13 +150,13 @@ export default function DiscountSettingsPage() {
         <div>
           <div className="text-[14px] font-bold text-[#101828]">ตั้งค่าส่วนลดสมาชิก</div>
           <div className="text-[13px] text-[#667085] mt-1 leading-relaxed">
-            กำหนดเปอร์เซ็นต์ส่วนลดค่าโดยสารสำหรับพนักงาน บขส. และข้าราชการ/ทหาร รวมถึงระยะเวลาแจ้งเตือนก่อนสิทธิ์หมดอายุ
+            กำหนดเปอร์เซ็นต์ส่วนลดค่าโดยสารสำหรับสมาชิกประเภทต่างๆ รวมถึงระยะเวลาแจ้งเตือนก่อนสิทธิ์หมดอายุ
             การเปลี่ยนแปลงจะมีผลกับสมาชิกที่ได้รับการอนุมัติใหม่เท่านั้น
           </div>
         </div>
       </div>
 
-      {/* Discount cards */}
+      {/* Discount cards — existing types */}
       <div className="grid grid-cols-2 gap-4">
         <DiscountCard
           title="พนักงาน บขส."
@@ -176,6 +182,51 @@ export default function DiscountSettingsPage() {
           }
           value={settings.officialDiscount}
           onChange={v => update("officialDiscount", v)}
+        />
+      </div>
+
+      {/* Discount cards — new types */}
+      <div className="grid grid-cols-3 gap-4">
+        <DiscountCard
+          title="ผู้สูงอายุ"
+          subtitle="อายุ 60 ปีขึ้นไป (ไม่มีวันหมดอายุ)"
+          iconBg="bg-[#fffbeb] text-[#b45309]"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+            </svg>
+          }
+          value={settings.seniorDiscount}
+          onChange={v => update("seniorDiscount", v)}
+        />
+        <DiscountCard
+          title="เด็กนักเรียน/นักศึกษา"
+          subtitle="บัตรนักเรียน/นักศึกษา (ต่ออายุปีละครั้ง)"
+          iconBg="bg-[#f0fdfa] text-[#0f766e]"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+            </svg>
+          }
+          value={settings.studentDiscount}
+          onChange={v => update("studentDiscount", v)}
+        />
+        <DiscountCard
+          title="ผู้พิการ"
+          subtitle="บัตรประจำตัวคนพิการ (ต่ออายุตามกำหนด)"
+          iconBg="bg-[#fff1f2] text-[#9f1239]"
+          icon={
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <circle cx="12" cy="4" r="2"/>
+              <path d="M9 10h4l2 8M9 10v5"/>
+              <circle cx="8" cy="19" r="2"/>
+              <circle cx="16" cy="19" r="2"/>
+              <path d="M15 15l1.5 4"/>
+            </svg>
+          }
+          value={settings.disabledDiscount}
+          onChange={v => update("disabledDiscount", v)}
         />
       </div>
 
@@ -260,7 +311,7 @@ export default function DiscountSettingsPage() {
               มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก
             </span>
           ) : (
-            <span className="text-[#9ca3af]">การตั้งค่าปัจจุบัน — พนักงาน {settings.employeeDiscount}% / ข้าราชการ {settings.officialDiscount}% / แจ้งเตือน {settings.renewalReminderDays} วัน</span>
+            <span className="text-[#9ca3af]">พนักงาน {settings.employeeDiscount}% · ข้าราชการ {settings.officialDiscount}% · ผู้สูงอายุ {settings.seniorDiscount}% · นักเรียน {settings.studentDiscount}% · ผู้พิการ {settings.disabledDiscount}% · แจ้งเตือน {settings.renewalReminderDays} วัน</span>
           )}
         </div>
         <div className="flex items-center gap-3">

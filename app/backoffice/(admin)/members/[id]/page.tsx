@@ -6,12 +6,15 @@ import {
   MOCK_MEMBERS,
   MEMBER_TYPE_LABELS,
   MEMBER_TYPE_COLORS,
+  MEMBER_TYPE_NEEDS_DOC,
+  MEMBER_TYPE_HAS_EXPIRY,
   MEMBER_STATUS_LABELS,
   MEMBER_STATUS_COLORS,
   isoToThai,
   isExpiringSoon,
   daysUntilExpiry,
   type Member,
+  type MemberType,
   type AuditEntry,
 } from "@/lib/mockMembers";
 
@@ -23,31 +26,79 @@ function oneYearFromNow(): string {
   return d.toISOString().split("T")[0];
 }
 
-function DocPlaceholder({ type }: { type: "employee" | "official" }) {
-  const isEmployee = type === "employee";
+type DocStyle = {
+  headerBg: string;
+  orgName: string;
+  cardType: string;
+  avatarBg: string;
+  avatarStroke: string;
+};
+
+const DOC_STYLES: Partial<Record<MemberType, DocStyle>> = {
+  employee: {
+    headerBg: "#171b82",
+    orgName: "TRANSPORT CO., LTD.",
+    cardType: "Employee Identification Card",
+    avatarBg: "#e0e3ff",
+    avatarStroke: "#171b82",
+  },
+  official: {
+    headerBg: "#6d28d9",
+    orgName: "GOVERNMENT OFFICIAL",
+    cardType: "Official Identification Card",
+    avatarBg: "#ede9fe",
+    avatarStroke: "#6d28d9",
+  },
+  senior: {
+    headerBg: "#b45309",
+    orgName: "NATIONAL ID VERIFICATION",
+    cardType: "Senior Citizen (Age 60+)",
+    avatarBg: "#fef3c7",
+    avatarStroke: "#b45309",
+  },
+  student: {
+    headerBg: "#0f766e",
+    orgName: "STUDENT IDENTIFICATION",
+    cardType: "Student / Academic Card",
+    avatarBg: "#ccfbf1",
+    avatarStroke: "#0f766e",
+  },
+  disabled: {
+    headerBg: "#9f1239",
+    orgName: "DISABILITY SERVICES",
+    cardType: "Persons with Disabilities",
+    avatarBg: "#ffe4e6",
+    avatarStroke: "#9f1239",
+  },
+};
+
+function DocPlaceholder({ memberType }: { memberType: MemberType }) {
+  const style = DOC_STYLES[memberType];
+  if (!style) return null;
   return (
     <div className="rounded-xl overflow-hidden border border-[#e5e7eb] shadow-sm">
-      <div className={`px-4 py-2.5 flex items-center justify-between ${isEmployee ? "bg-[#171b82]" : "bg-[#6d28d9]"}`}>
+      <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: style.headerBg }}>
         <div className="flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-          <span className="text-white text-[11px] font-bold tracking-wide">
-            {isEmployee ? "TRANSPORT CO., LTD." : "GOVERNMENT OFFICIAL"}
-          </span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+          <span className="text-white text-[11px] font-bold tracking-wide">{style.orgName}</span>
         </div>
         <span className="text-white/60 text-[9px] font-medium">บขส.</span>
       </div>
       <div className="bg-[#f8f9fb] p-5">
         <div className="flex gap-4">
-          <div className={`w-16 h-20 rounded-lg flex items-center justify-center shrink-0 ${isEmployee ? "bg-[#e0e3ff]" : "bg-[#ede9fe]"}`}>
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={isEmployee ? "#171b82" : "#6d28d9"} strokeWidth="1.5">
+          <div className="w-16 h-20 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: style.avatarBg }}>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={style.avatarStroke} strokeWidth="1.5">
               <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
           </div>
           <div className="flex-1">
-            <div className="text-[9px] font-bold text-[#9ca3af] uppercase tracking-wider mb-1">
-              {isEmployee ? "Employee Identification Card" : "Official Identification Card"}
-            </div>
+            <div className="text-[9px] font-bold text-[#9ca3af] uppercase tracking-wider mb-1">{style.cardType}</div>
             <div className="text-[13px] font-bold text-[#101828] leading-tight">สมาชิก บขส.</div>
             <div className="text-[10px] text-[#667085] mt-0.5 font-mono">ID: BKS-XXXX-XXXX</div>
             <div className="mt-2 flex flex-col gap-0.5">
@@ -64,7 +115,7 @@ function DocPlaceholder({ type }: { type: "employee" | "official" }) {
         </div>
         <div className="mt-3 pt-3 border-t border-[#e5e7eb] flex items-center justify-between">
           <span className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider">ตัวอย่างเอกสารที่อัปโหลด</span>
-          <div className={`flex items-center gap-1 text-[9px] font-bold ${isEmployee ? "text-[#171b82]" : "text-[#6d28d9]"}`}>
+          <div className="flex items-center gap-1 text-[9px] font-bold" style={{ color: style.headerBg }}>
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             ยืนยันการอัปโหลด
           </div>
@@ -82,11 +133,11 @@ export default function MemberDetailPage() {
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [reminderDays, setReminderDays] = useState(30);
   const [adminName, setAdminName] = useState("แอดมิน");
-  const [defaultDiscount, setDefaultDiscount] = useState(50);
+  const [defaultDiscount, setDefaultDiscount] = useState(0);
 
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [approveExpiryDate, setApproveExpiryDate] = useState(oneYearFromNow());
-  const [approveDiscount, setApproveDiscount] = useState(50);
+  const [approveDiscount, setApproveDiscount] = useState(0);
 
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -108,10 +159,28 @@ export default function MemberDetailPage() {
     setAuditLog([...base.mockAuditLog, ...memberEntries]);
 
     const settingsRaw = localStorage.getItem("bks_discount_settings");
+    const discountDefaults: Partial<Record<MemberType, number>> = {
+      employee: 50,
+      official: 50,
+      senior: 30,
+      student: 30,
+      disabled: 40,
+    };
     if (settingsRaw) {
       const s = JSON.parse(settingsRaw);
       setReminderDays(s.renewalReminderDays ?? 30);
-      const disc = base.memberType === "employee" ? (s.employeeDiscount ?? 50) : base.memberType === "official" ? (s.officialDiscount ?? 50) : 0;
+      const discountByType: Partial<Record<MemberType, number>> = {
+        employee: s.employeeDiscount ?? 50,
+        official: s.officialDiscount ?? 50,
+        senior: s.seniorDiscount ?? 30,
+        student: s.studentDiscount ?? 30,
+        disabled: s.disabledDiscount ?? 40,
+      };
+      const disc = discountByType[base.memberType] ?? 0;
+      setDefaultDiscount(disc);
+      setApproveDiscount(disc);
+    } else {
+      const disc = discountDefaults[base.memberType] ?? 0;
       setDefaultDiscount(disc);
       setApproveDiscount(disc);
     }
@@ -149,14 +218,21 @@ export default function MemberDetailPage() {
   };
 
   const handleApprove = () => {
-    const patch = {
+    if (!member) return;
+    const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.memberType];
+    const needsDoc = MEMBER_TYPE_NEEDS_DOC[member.memberType];
+    const patch: Partial<Member> = {
       status: "approved" as const,
       approvedAt: new Date().toISOString().split("T")[0],
-      expiryDate: approveExpiryDate,
-      discountPercent: approveDiscount,
+      ...(hasExpiry ? { expiryDate: approveExpiryDate } : {}),
+      ...(needsDoc ? { discountPercent: approveDiscount } : {}),
     };
     patchOverride(patch);
-    addAuditEntry("อนุมัติ", `อนุมัติสิทธิ์สมาชิก ส่วนลด ${approveDiscount}% หมดอายุ ${isoToThai(approveExpiryDate)}`);
+    let note = "อนุมัติสิทธิ์สมาชิก";
+    if (needsDoc) note += ` ส่วนลด ${approveDiscount}%`;
+    if (hasExpiry) note += ` หมดอายุ ${isoToThai(approveExpiryDate)}`;
+    else if (needsDoc) note += " (ไม่มีวันหมดอายุ)";
+    addAuditEntry("อนุมัติ", note);
     setMember(prev => prev ? { ...prev, ...patch } : null);
     setShowApproveModal(false);
     setSuccessMsg("อนุมัติสำเร็จ");
@@ -177,9 +253,8 @@ export default function MemberDetailPage() {
 
   if (!member) return null;
 
-  const isEmployee = member.memberType === "employee";
-  const isOfficial = member.memberType === "official";
-  const hasDoc = isEmployee || isOfficial;
+  const hasDoc = MEMBER_TYPE_NEEDS_DOC[member.memberType];
+  const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.memberType];
   const canAct = member.status === "pending" || member.status === "rejected";
   const expiringSoon = member.status === "approved" && isExpiringSoon(member.expiryDate, reminderDays);
 
@@ -254,7 +329,7 @@ export default function MemberDetailPage() {
                   <div>
                     <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">วันหมดอายุ</div>
                     <div className={`text-[13px] font-medium ${expiringSoon ? "text-[#b45309] font-bold" : "text-[#344054]"}`}>
-                      {member.expiryDate ? isoToThai(member.expiryDate) : "—"}
+                      {member.expiryDate ? isoToThai(member.expiryDate) : "ไม่มีวันหมดอายุ"}
                     </div>
                   </div>
                   {member.discountPercent != null && (
@@ -332,7 +407,7 @@ export default function MemberDetailPage() {
           <div className="flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
               <div className="text-[13px] font-bold text-[#101828] mb-3">{member.documentLabel}</div>
-              <DocPlaceholder type={isEmployee ? "employee" : "official"} />
+              <DocPlaceholder memberType={member.memberType} />
               <p className="text-[11px] text-[#9ca3af] text-center mt-3">ตัวอย่างเอกสารที่สมาชิกอัปโหลด</p>
             </div>
           </div>
@@ -355,17 +430,30 @@ export default function MemberDetailPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-              <div>
-                <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">วันหมดอายุ</label>
-                <input
-                  type="date"
-                  value={approveExpiryDate}
-                  onChange={e => setApproveExpiryDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10"
-                />
-              </div>
-              {(isEmployee || isOfficial) && (
+              {/* Expiry date — only for types that have expiry */}
+              {hasExpiry && (
+                <div>
+                  <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">วันหมดอายุ</label>
+                  <input
+                    type="date"
+                    value={approveExpiryDate}
+                    onChange={e => setApproveExpiryDate(e.target.value)}
+                    min={new Date().toISOString().split("T")[0]}
+                    className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10"
+                  />
+                </div>
+              )}
+
+              {/* No-expiry note for senior */}
+              {!hasExpiry && hasDoc && (
+                <div className="flex items-center gap-2 bg-[#f0fdf4] border border-[#86efac] rounded-lg px-3 py-2.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span className="text-[12px] text-[#15803d] font-medium">สิทธิ์ประเภทนี้ไม่มีวันหมดอายุ</span>
+                </div>
+              )}
+
+              {/* Discount — for all types that require a document */}
+              {hasDoc && (
                 <div>
                   <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">
                     ส่วนลด (%)

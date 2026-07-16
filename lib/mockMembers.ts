@@ -1,4 +1,4 @@
-export type MemberType = "general" | "employee" | "official";
+export type MemberType = "general" | "employee" | "official" | "senior" | "student" | "disabled";
 export type MemberStatus = "pending" | "approved" | "rejected" | "expired";
 
 export type AuditEntry = {
@@ -29,12 +29,18 @@ export const MEMBER_TYPE_LABELS: Record<MemberType, string> = {
   general: "ผู้ใช้ทั่วไป",
   employee: "พนักงาน บขส.",
   official: "ข้าราชการ/ทหาร",
+  senior: "ผู้สูงอายุ",
+  student: "เด็กนักเรียน/นักศึกษา",
+  disabled: "ผู้พิการ",
 };
 
 export const MEMBER_TYPE_COLORS: Record<MemberType, string> = {
   general: "bg-[#f3f4f6] text-[#667085]",
   employee: "bg-[#f0f2ff] text-[#171b82]",
   official: "bg-[#f5f3ff] text-[#6d28d9]",
+  senior: "bg-[#fffbeb] text-[#b45309]",
+  student: "bg-[#f0fdfa] text-[#0f766e]",
+  disabled: "bg-[#fff1f2] text-[#9f1239]",
 };
 
 export const MEMBER_STATUS_LABELS: Record<MemberStatus, string> = {
@@ -49,6 +55,34 @@ export const MEMBER_STATUS_COLORS: Record<MemberStatus, string> = {
   approved: "bg-[#d1fae5] text-[#059669]",
   rejected: "bg-[#fee2e2] text-[#dc2626]",
   expired: "bg-[#f3f4f6] text-[#9ca3af]",
+};
+
+// false for types with no expiry (general, senior); true for all others
+export const MEMBER_TYPE_HAS_EXPIRY: Record<MemberType, boolean> = {
+  general: false,
+  employee: true,
+  official: true,
+  senior: false,
+  student: true,
+  disabled: true,
+};
+
+export const MEMBER_TYPE_NEEDS_DOC: Record<MemberType, boolean> = {
+  general: false,
+  employee: true,
+  official: true,
+  senior: true,
+  student: true,
+  disabled: true,
+};
+
+export const MEMBER_TYPE_DOC_LABEL: Record<MemberType, string> = {
+  general: "",
+  employee: "บัตรพนักงาน บขส.",
+  official: "บัตรประจำตัวข้าราชการ/ทหาร",
+  senior: "บัตรประชาชน (ยืนยันอายุ 60 ปีขึ้นไป)",
+  student: "บัตรนักเรียน/บัตรนักศึกษา",
+  disabled: "บัตรประจำตัวคนพิการ",
 };
 
 export function isoToThai(iso: string): string {
@@ -313,6 +347,102 @@ export const MOCK_MEMBERS: Member[] = [
     submittedAt: "2026-01-20",
     mockAuditLog: [
       { id: "AL-040", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "20 ม.ค. 2569, 12:00" },
+    ],
+  },
+  {
+    id: "MEM-016",
+    name: "นายสมศักดิ์ วัยชรา",
+    email: "somsak@gmail.com",
+    phone: "096-789-0123",
+    memberType: "senior",
+    status: "pending",
+    documentLabel: "บัตรประชาชน (ยืนยันอายุ 60 ปีขึ้นไป)",
+    submittedAt: "2026-07-13",
+    mockAuditLog: [
+      { id: "AL-041", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "13 ก.ค. 2569, 10:00" },
+      { id: "AL-042", adminName: "ระบบ", action: "ส่งเอกสาร", note: "อัปโหลดบัตรประชาชน", timestamp: "13 ก.ค. 2569, 10:08" },
+    ],
+  },
+  {
+    id: "MEM-017",
+    name: "นางพิมพ์ใจ บุญมี",
+    email: "pimjai@gmail.com",
+    phone: "097-890-1234",
+    memberType: "senior",
+    status: "approved",
+    documentLabel: "บัตรประชาชน (ยืนยันอายุ 60 ปีขึ้นไป)",
+    submittedAt: "2025-11-01",
+    approvedAt: "2025-11-15",
+    discountPercent: 30,
+    mockAuditLog: [
+      { id: "AL-043", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "1 พ.ย. 2568, 09:00" },
+      { id: "AL-044", adminName: "ระบบ", action: "ส่งเอกสาร", note: "อัปโหลดบัตรประชาชน", timestamp: "1 พ.ย. 2568, 09:15" },
+      { id: "AL-045", adminName: "สมชาย วรรณา", action: "อนุมัติ", note: "ยืนยันอายุ 60 ปีขึ้นไป สิทธิ์ไม่มีวันหมดอายุ ส่วนลด 30%", timestamp: "15 พ.ย. 2568, 14:00" },
+    ],
+  },
+  {
+    id: "MEM-018",
+    name: "นายอภิชาติ เรียนดี",
+    email: "apichat@uni.ac.th",
+    phone: "098-901-2345",
+    memberType: "student",
+    status: "pending",
+    documentLabel: "บัตรนักเรียน/บัตรนักศึกษา",
+    submittedAt: "2026-07-11",
+    mockAuditLog: [
+      { id: "AL-046", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "11 ก.ค. 2569, 16:00" },
+      { id: "AL-047", adminName: "ระบบ", action: "ส่งเอกสาร", note: "อัปโหลดบัตรนักศึกษา", timestamp: "11 ก.ค. 2569, 16:10" },
+    ],
+  },
+  {
+    id: "MEM-019",
+    name: "นางสาวกนกวรรณ ศึกษาดี",
+    email: "kanok@school.ac.th",
+    phone: "099-012-3456",
+    memberType: "student",
+    status: "expired",
+    documentLabel: "บัตรนักเรียน/บัตรนักศึกษา",
+    submittedAt: "2025-09-01",
+    approvedAt: "2025-09-10",
+    expiryDate: "2026-05-31",
+    discountPercent: 30,
+    mockAuditLog: [
+      { id: "AL-048", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "1 ก.ย. 2568, 11:00" },
+      { id: "AL-049", adminName: "ระบบ", action: "ส่งเอกสาร", note: "อัปโหลดบัตรนักศึกษา", timestamp: "1 ก.ย. 2568, 11:10" },
+      { id: "AL-050", adminName: "สมชาย วรรณา", action: "อนุมัติ", note: "เอกสารถูกต้อง หมดอายุสิ้นปีการศึกษา", timestamp: "10 ก.ย. 2568, 09:00" },
+      { id: "AL-051", adminName: "ระบบ", action: "หมดอายุ", note: "สิทธิ์สมาชิกหมดอายุอัตโนมัติ", timestamp: "31 พ.ค. 2569, 23:59" },
+    ],
+  },
+  {
+    id: "MEM-020",
+    name: "นายธนพล ใจแข็ง",
+    email: "thanaphon@gmail.com",
+    phone: "090-123-4568",
+    memberType: "disabled",
+    status: "pending",
+    documentLabel: "บัตรประจำตัวคนพิการ",
+    submittedAt: "2026-07-08",
+    mockAuditLog: [
+      { id: "AL-052", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "8 ก.ค. 2569, 13:00" },
+      { id: "AL-053", adminName: "ระบบ", action: "ส่งเอกสาร", note: "อัปโหลดบัตรประจำตัวคนพิการ", timestamp: "8 ก.ค. 2569, 13:15" },
+    ],
+  },
+  {
+    id: "MEM-021",
+    name: "นางประนอม มีชัย",
+    email: "pranom@gmail.com",
+    phone: "091-234-5679",
+    memberType: "disabled",
+    status: "approved",
+    documentLabel: "บัตรประจำตัวคนพิการ",
+    submittedAt: "2025-12-01",
+    approvedAt: "2025-12-10",
+    expiryDate: "2027-03-31",
+    discountPercent: 40,
+    mockAuditLog: [
+      { id: "AL-054", adminName: "ระบบ", action: "ลงทะเบียน", timestamp: "1 ธ.ค. 2568, 10:00" },
+      { id: "AL-055", adminName: "ระบบ", action: "ส่งเอกสาร", note: "อัปโหลดบัตรประจำตัวคนพิการ", timestamp: "1 ธ.ค. 2568, 10:10" },
+      { id: "AL-056", adminName: "สมชาย วรรณา", action: "อนุมัติ", note: "เอกสารถูกต้องครบถ้วน ส่วนลด 40%", timestamp: "10 ธ.ค. 2568, 11:00" },
     ],
   },
 ];

@@ -22,6 +22,9 @@ const TYPE_FILTER_TABS: { key: MemberType | "all"; label: string }[] = [
   { key: "general", label: "ผู้ใช้ทั่วไป" },
   { key: "employee", label: "พนักงาน บขส." },
   { key: "official", label: "ข้าราชการ/ทหาร" },
+  { key: "senior", label: "ผู้สูงอายุ" },
+  { key: "student", label: "นักเรียน/นักศึกษา" },
+  { key: "disabled", label: "ผู้พิการ" },
 ];
 
 const STATUS_FILTER_TABS: { key: MemberStatus | "all"; label: string }[] = [

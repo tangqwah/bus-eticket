@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
+import { MEMBER_TYPE_LABELS, MEMBER_TYPE_COLORS, type MemberType } from "@/lib/mockMembers";
 
 type BookingStatus = "confirmed" | "pending" | "cancelled";
+type BookingUserType = MemberType | "guest";
 
 type Booking = {
   id: string;
@@ -15,21 +17,22 @@ type Booking = {
   total: number;
   status: BookingStatus;
   paymentMethod: string;
+  userType: BookingUserType;
 };
 
 const MOCK_BOOKINGS: Booking[] = [
-  { id: "BKS-5W2X89", date: "14 ก.ค. 69", travelDate: "15 ก.ค. 69", passenger: "นายทดสอบ ระบบ",       phone: "081-234-5678", from: "สายใต้ใหม่", to: "ภูเก็ต",        seats: 2, total: 1190, status: "confirmed", paymentMethod: "บัตรเดบิต" },
-  { id: "BKS-4K9R22", date: "15 ก.ค. 69", travelDate: "16 ก.ค. 69", passenger: "นางสาวสมหญิง ดีดี",    phone: "082-345-6789", from: "หมอชิต 2",   to: "เชียงใหม่",    seats: 1, total: 648,  status: "confirmed", paymentMethod: "QR Code" },
-  { id: "BKS-8P1Q45", date: "15 ก.ค. 69", travelDate: "16 ก.ค. 69", passenger: "นายวิทยา ใจดี",        phone: "083-456-7890", from: "สายใต้ใหม่", to: "สุราษฎร์ธานี", seats: 2, total: 890,  status: "pending",   paymentMethod: "โอนเงิน" },
-  { id: "BKS-2M7T88", date: "14 ก.ค. 69", travelDate: "15 ก.ค. 69", passenger: "นางบุญมี รักดี",        phone: "084-567-8901", from: "เอกมัย",     to: "พัทยา",        seats: 2, total: 220,  status: "cancelled", paymentMethod: "บัตรเดบิต" },
-  { id: "BKS-6N3H71", date: "15 ก.ค. 69", travelDate: "17 ก.ค. 69", passenger: "นายประทีป ศรีดี",      phone: "085-678-9012", from: "หมอชิต 2",   to: "ขอนแก่น",      seats: 2, total: 760,  status: "confirmed", paymentMethod: "เงินสด" },
-  { id: "BKS-9Y4L33", date: "15 ก.ค. 69", travelDate: "17 ก.ค. 69", passenger: "นายสมชาย ดีมาก",       phone: "086-789-0123", from: "สายใต้ใหม่", to: "ภูเก็ต",        seats: 3, total: 1785, status: "confirmed", paymentMethod: "QR Code" },
-  { id: "BKS-3R9T12", date: "09 พ.ค. 69", travelDate: "10 พ.ค. 69", passenger: "นายทดสอบ ระบบ",       phone: "081-234-5678", from: "เชียงใหม่",   to: "หมอชิต 2",     seats: 1, total: 648,  status: "confirmed", paymentMethod: "บัตรเดบิต" },
-  { id: "BKS-7K4Q28", date: "25 มิ.ย. 69", travelDate: "26 มิ.ย. 69", passenger: "นายทดสอบ ระบบ",     phone: "081-234-5678", from: "สายใต้ใหม่", to: "ขอนแก่น",      seats: 2, total: 854,  status: "confirmed", paymentMethod: "บัตรเดบิต" },
-  { id: "BKS-1A2B34", date: "14 มี.ค. 69", travelDate: "15 มี.ค. 69", passenger: "นายทดสอบ ระบบ",     phone: "081-234-5678", from: "หมอชิต 2",   to: "อุดรธานี",      seats: 2, total: 1240, status: "confirmed", paymentMethod: "โอนเงิน" },
-  { id: "BKS-5C6D78", date: "15 ก.ค. 69", travelDate: "18 ก.ค. 69", passenger: "นางสาวรักษ์ ธรรมดี",  phone: "087-890-1234", from: "สายใต้ใหม่", to: "ชุมพร",         seats: 1, total: 320,  status: "pending",   paymentMethod: "QR Code" },
-  { id: "BKS-8E9F01", date: "15 ก.ค. 69", travelDate: "18 ก.ค. 69", passenger: "นายกิตติ ดีใจ",       phone: "088-901-2345", from: "หมอชิต 2",   to: "อุบลราชธานี",  seats: 2, total: 960,  status: "confirmed", paymentMethod: "บัตรเครดิต" },
-  { id: "BKS-2G3H45", date: "14 ก.ค. 69", travelDate: "16 ก.ค. 69", passenger: "นางวิภา สุขใจ",       phone: "089-012-3456", from: "เอกมัย",     to: "พัทยา",         seats: 4, total: 440,  status: "cancelled", paymentMethod: "โอนเงิน" },
+  { id: "BKS-5W2X89", date: "14 ก.ค. 69", travelDate: "15 ก.ค. 69", passenger: "นายทดสอบ ระบบ",       phone: "081-234-5678", from: "สายใต้ใหม่", to: "ภูเก็ต",        seats: 2, total: 1190, status: "confirmed", paymentMethod: "บัตรเดบิต",  userType: "general" },
+  { id: "BKS-4K9R22", date: "15 ก.ค. 69", travelDate: "16 ก.ค. 69", passenger: "นางสาวสมหญิง ดีดี",    phone: "082-345-6789", from: "หมอชิต 2",   to: "เชียงใหม่",    seats: 1, total: 648,  status: "confirmed", paymentMethod: "QR Code",     userType: "guest" },
+  { id: "BKS-8P1Q45", date: "15 ก.ค. 69", travelDate: "16 ก.ค. 69", passenger: "นายวิทยา ใจดี",        phone: "083-456-7890", from: "สายใต้ใหม่", to: "สุราษฎร์ธานี", seats: 2, total: 890,  status: "pending",   paymentMethod: "โอนเงิน",    userType: "employee" },
+  { id: "BKS-2M7T88", date: "14 ก.ค. 69", travelDate: "15 ก.ค. 69", passenger: "นางบุญมี รักดี",        phone: "084-567-8901", from: "เอกมัย",     to: "พัทยา",        seats: 2, total: 220,  status: "cancelled", paymentMethod: "บัตรเดบิต",  userType: "guest" },
+  { id: "BKS-6N3H71", date: "15 ก.ค. 69", travelDate: "17 ก.ค. 69", passenger: "นายประทีป ศรีดี",      phone: "085-678-9012", from: "หมอชิต 2",   to: "ขอนแก่น",      seats: 2, total: 760,  status: "confirmed", paymentMethod: "เงินสด",      userType: "official" },
+  { id: "BKS-9Y4L33", date: "15 ก.ค. 69", travelDate: "17 ก.ค. 69", passenger: "นายสมชาย ดีมาก",       phone: "086-789-0123", from: "สายใต้ใหม่", to: "ภูเก็ต",        seats: 3, total: 1785, status: "confirmed", paymentMethod: "QR Code",     userType: "guest" },
+  { id: "BKS-3R9T12", date: "09 พ.ค. 69", travelDate: "10 พ.ค. 69", passenger: "นายทดสอบ ระบบ",       phone: "081-234-5678", from: "เชียงใหม่",   to: "หมอชิต 2",     seats: 1, total: 648,  status: "confirmed", paymentMethod: "บัตรเดบิต",  userType: "general" },
+  { id: "BKS-7K4Q28", date: "25 มิ.ย. 69", travelDate: "26 มิ.ย. 69", passenger: "นายทดสอบ ระบบ",     phone: "081-234-5678", from: "สายใต้ใหม่", to: "ขอนแก่น",      seats: 2, total: 854,  status: "confirmed", paymentMethod: "บัตรเดบิต",  userType: "general" },
+  { id: "BKS-1A2B34", date: "14 มี.ค. 69", travelDate: "15 มี.ค. 69", passenger: "นายทดสอบ ระบบ",     phone: "081-234-5678", from: "หมอชิต 2",   to: "อุดรธานี",      seats: 2, total: 1240, status: "confirmed", paymentMethod: "โอนเงิน",    userType: "general" },
+  { id: "BKS-5C6D78", date: "15 ก.ค. 69", travelDate: "18 ก.ค. 69", passenger: "นางสาวรักษ์ ธรรมดี",  phone: "087-890-1234", from: "สายใต้ใหม่", to: "ชุมพร",         seats: 1, total: 320,  status: "pending",   paymentMethod: "QR Code",     userType: "senior" },
+  { id: "BKS-8E9F01", date: "15 ก.ค. 69", travelDate: "18 ก.ค. 69", passenger: "นายกิตติ ดีใจ",       phone: "088-901-2345", from: "หมอชิต 2",   to: "อุบลราชธานี",  seats: 2, total: 960,  status: "confirmed", paymentMethod: "บัตรเครดิต", userType: "student" },
+  { id: "BKS-2G3H45", date: "14 ก.ค. 69", travelDate: "16 ก.ค. 69", passenger: "นางวิภา สุขใจ",       phone: "089-012-3456", from: "เอกมัย",     to: "พัทยา",         seats: 4, total: 440,  status: "cancelled", paymentMethod: "โอนเงิน",    userType: "disabled" },
 ];
 
 const STATUS_MAP: Record<BookingStatus, { label: string; cls: string }> = {
@@ -120,7 +123,7 @@ export default function BookingsPage() {
         <table className="w-full text-[13px]">
           <thead>
             <tr className="border-b border-[#f3f4f6]">
-              {["เลขที่จอง", "วันที่จอง", "ผู้โดยสาร", "เส้นทาง", "วันเดินทาง", "ที่นั่ง", "ยอดรวม", "ชำระผ่าน", "สถานะ", ""].map(h => (
+              {["เลขที่จอง", "วันที่จอง", "ผู้โดยสาร", "ประเภทผู้ใช้", "เส้นทาง", "วันเดินทาง", "ที่นั่ง", "ยอดรวม", "ชำระผ่าน", "สถานะ", ""].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -128,7 +131,7 @@ export default function BookingsPage() {
           <tbody className="divide-y divide-[#f9fafb]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-5 py-12 text-center text-[14px] text-[#9ca3af]">ไม่พบการจอง</td>
+                <td colSpan={11} className="px-5 py-12 text-center text-[14px] text-[#9ca3af]">ไม่พบการจอง</td>
               </tr>
             ) : filtered.map(b => {
               const st = STATUS_MAP[b.status];
@@ -139,6 +142,18 @@ export default function BookingsPage() {
                   <td className="px-4 py-3.5">
                     <div className="font-medium text-[#101828]">{b.passenger}</div>
                     <div className="text-[11px] text-[#9ca3af] mt-0.5">{b.phone}</div>
+                  </td>
+                  <td className="px-4 py-3.5 whitespace-nowrap">
+                    {b.userType === "guest" ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#f3f4f6] text-[#667085]">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                        ไม่ได้เข้าสู่ระบบ
+                      </span>
+                    ) : (
+                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${MEMBER_TYPE_COLORS[b.userType]}`}>
+                        {MEMBER_TYPE_LABELS[b.userType]}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="text-[#101828] font-medium">{b.from}</div>
