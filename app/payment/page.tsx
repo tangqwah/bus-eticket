@@ -7,6 +7,13 @@ import { readDraft, writeDraft, generateBookingNo, thaiDateLong, cityOf, type Bo
 
 type PayMethod = "card" | "qr" | "promptpay" | "counter";
 
+type CardErrors = {
+  name?: string;
+  cardNum?: string;
+  expiry?: string;
+  cvv?: string;
+};
+
 const METHODS = [
   { id: "card" as const, label: "บัตรเครดิต/เดบิต", icon: "💳", desc: "Visa, Mastercard, JCB" },
   { id: "qr" as const, label: "QR Code", icon: "📱", desc: "Thai QR Payment" },
@@ -14,17 +21,29 @@ const METHODS = [
   { id: "counter" as const, label: "ชำระที่เคาน์เตอร์", icon: "🏪", desc: "7-Eleven, Big C, Lotus's" },
 ];
 
+function errCls(err?: string) {
+  return err
+    ? "border-[#f04438] focus:ring-[#f04438] focus:border-[#f04438]"
+    : "border-[#d0d5dd] focus:ring-[#171b82] focus:border-[#171b82]";
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-[12px] text-[#f04438] mt-1">{msg}</p>;
+}
+
 export default function PaymentPage() {
   const router = useRouter();
 
-  const [draft, setDraft]     = useState<BookingDraft | null>(null);
-  const [ready, setReady]     = useState(false);
-  const [method, setMethod]   = useState<PayMethod>("card");
-  const [cardNum, setCardNum] = useState("");
-  const [expiry, setExpiry]   = useState("");
-  const [cvv, setCvv]         = useState("");
-  const [name, setName]       = useState("");
-  const [loading, setLoading] = useState(false);
+  const [draft, setDraft]         = useState<BookingDraft | null>(null);
+  const [ready, setReady]         = useState(false);
+  const [method, setMethod]       = useState<PayMethod>("card");
+  const [cardNum, setCardNum]     = useState("");
+  const [expiry, setExpiry]       = useState("");
+  const [cvv, setCvv]             = useState("");
+  const [name, setName]           = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [cardErrors, setCardErrors] = useState<CardErrors>({});
 
   useEffect(() => {
     const d = readDraft();
@@ -35,10 +54,58 @@ export default function PaymentPage() {
 
   if (!ready || !draft || !draft.passengers || !draft.seats) return null;
 
-  const total     = draft.pricePerSeat * draft.passengers.length;
-  const seatList  = draft.seats.join(", ");
+  const total    = draft.pricePerSeat * draft.passengers.length;
+  const seatList = draft.seats.join(", ");
+
+  const clearErr = (field: keyof CardErrors) => {
+    if (cardErrors[field]) setCardErrors(p => ({ ...p, [field]: undefined }));
+  };
+
+  const validateCard = (): boolean => {
+    if (method !== "card") return true;
+    const e: CardErrors = {};
+
+    if (!name.trim()) {
+      e.name = "กรุณากรอกชื่อบนบัตร";
+    }
+
+    const digits = cardNum.replace(/\D/g, "");
+    if (!cardNum.trim()) {
+      e.cardNum = "กรุณากรอกหมายเลขบัตร";
+    } else if (digits.length !== 16) {
+      e.cardNum = "หมายเลขบัตรต้องมี 16 หลัก";
+    }
+
+    if (!expiry.trim()) {
+      e.expiry = "กรุณากรอกวันหมดอายุ";
+    } else {
+      const parts = expiry.split("/");
+      const mm = parseInt(parts[0], 10);
+      const yy = parseInt(parts[1], 10);
+      if (parts.length !== 2 || isNaN(mm) || isNaN(yy) || mm < 1 || mm > 12 || parts[1].length !== 2) {
+        e.expiry = "รูปแบบไม่ถูกต้อง (MM/YY)";
+      } else {
+        const now = new Date();
+        const expYear = 2000 + yy;
+        if (expYear < now.getFullYear() || (expYear === now.getFullYear() && mm < now.getMonth() + 1)) {
+          e.expiry = "บัตรหมดอายุแล้ว";
+        }
+      }
+    }
+
+    const cvvDigits = cvv.replace(/\D/g, "");
+    if (!cvv.trim()) {
+      e.cvv = "กรุณากรอก CVV";
+    } else if (cvvDigits.length < 3) {
+      e.cvv = "CVV ต้องมี 3-4 หลัก";
+    }
+
+    setCardErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
   const handlePay = () => {
+    if (!validateCard()) return;
     const bookingNo = generateBookingNo();
     writeDraft({ ...draft, bookingNo });
     setLoading(true);
@@ -52,6 +119,8 @@ export default function PaymentPage() {
     const d = v.replace(/\D/g, "").slice(0, 4);
     return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
   };
+
+  const baseCls = "w-full border rounded-lg px-3 py-2.5 text-[14px] outline-none focus:ring-1";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f9fafb]">
@@ -67,7 +136,7 @@ export default function PaymentPage() {
               {METHODS.map(m => (
                 <button
                   key={m.id}
-                  onClick={() => setMethod(m.id)}
+                  onClick={() => { setMethod(m.id); setCardErrors({}); }}
                   className={`flex items-center gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
                     method === m.id
                       ? "border-[#171b82] bg-[#f0f2ff]"
@@ -95,44 +164,56 @@ export default function PaymentPage() {
               <h3 className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลบัตร</h3>
               <div className="flex flex-col gap-4">
                 <div>
-                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">ชื่อบนบัตร</label>
+                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                    ชื่อบนบัตร <span className="text-[#f04438]">*</span>
+                  </label>
                   <input
                     value={name}
-                    onChange={e => setName(e.target.value)}
-                    className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82]"
+                    onChange={e => { setName(e.target.value); clearErr("name"); }}
+                    className={`${baseCls} ${errCls(cardErrors.name)}`}
                     placeholder="ชื่อ-นามสกุลบนบัตร"
                   />
+                  <FieldError msg={cardErrors.name} />
                 </div>
                 <div>
-                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">หมายเลขบัตร</label>
+                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                    หมายเลขบัตร <span className="text-[#f04438]">*</span>
+                  </label>
                   <input
                     value={cardNum}
-                    onChange={e => setCardNum(formatCard(e.target.value))}
-                    className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82] font-mono tracking-wider"
+                    onChange={e => { setCardNum(formatCard(e.target.value)); clearErr("cardNum"); }}
+                    className={`${baseCls} ${errCls(cardErrors.cardNum)} font-mono tracking-wider`}
                     placeholder="0000 0000 0000 0000"
                     maxLength={19}
                   />
+                  <FieldError msg={cardErrors.cardNum} />
                 </div>
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">วันหมดอายุ</label>
+                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                      วันหมดอายุ <span className="text-[#f04438]">*</span>
+                    </label>
                     <input
                       value={expiry}
-                      onChange={e => setExpiry(formatExpiry(e.target.value))}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82]"
+                      onChange={e => { setExpiry(formatExpiry(e.target.value)); clearErr("expiry"); }}
+                      className={`${baseCls} ${errCls(cardErrors.expiry)}`}
                       placeholder="MM/YY"
                       maxLength={5}
                     />
+                    <FieldError msg={cardErrors.expiry} />
                   </div>
                   <div className="w-[140px]">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">CVV</label>
+                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                      CVV <span className="text-[#f04438]">*</span>
+                    </label>
                     <input
                       value={cvv}
-                      onChange={e => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82]"
+                      onChange={e => { setCvv(e.target.value.replace(/\D/g, "").slice(0, 4)); clearErr("cvv"); }}
+                      className={`${baseCls} ${errCls(cardErrors.cvv)}`}
                       placeholder="000"
                       maxLength={4}
                     />
+                    <FieldError msg={cardErrors.cvv} />
                   </div>
                 </div>
               </div>
