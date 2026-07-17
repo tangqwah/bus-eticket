@@ -1,25 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
+import {
+  readDraft, writeDraft, thaiDateLong, cityOf, stationOf,
+  type PassengerInfo, type BookingDraft,
+} from "@/lib/bookingStore";
 
-type IdType = "citizen" | "passport";
-type PassengerGender = "male" | "female" | "child";
-
-interface Passenger {
-  title: string;
-  firstName: string;
-  lastName: string;
-  idType: IdType;
-  idNumber: string;
-  gender: PassengerGender;
-  phone: string;
-  email: string;
-  pickup: string;
-}
-
-const EMPTY_PAX: Passenger = {
+const EMPTY_PAX: PassengerInfo = {
   title: "นาย",
   firstName: "",
   lastName: "",
@@ -31,23 +20,102 @@ const EMPTY_PAX: Passenger = {
   pickup: "สถานีขนส่งสายใต้ใหม่",
 };
 
+type FieldErrors = {
+  firstName?: string;
+  lastName?: string;
+  idNumber?: string;
+  phone?: string;
+  email?: string;
+};
+
+function errCls(err?: string) {
+  return err
+    ? "border-[#f04438] focus:ring-[#f04438] focus:border-[#f04438]"
+    : "border-[#d0d5dd] focus:ring-[#171b82] focus:border-[#171b82]";
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p className="text-[12px] text-[#f04438] mt-1">{msg}</p>;
+}
+
 export default function PassengerPage() {
   const router = useRouter();
-  const [passengers, setPassengers] = useState<Passenger[]>([
-    { ...EMPTY_PAX, title: "นาย", firstName: "บ๊อบบี้", lastName: "คิ้วบาก", idNumber: "1234567890123", phone: "0812345678", email: "bobby@example.com", gender: "male" },
-    { ...EMPTY_PAX, title: "นางสาว", firstName: "ฮันนี่", lastName: "สะเต้อ", idNumber: "9876543210987", phone: "0898765432", email: "honey@example.com", gender: "female" },
-  ]);
 
-  const updatePax = (i: number, field: keyof Passenger, value: string) => {
+  const [draft, setDraft]           = useState<BookingDraft | null>(null);
+  const [passengers, setPassengers] = useState<PassengerInfo[]>([]);
+  const [ready, setReady]           = useState(false);
+  const [errors, setErrors]         = useState<FieldErrors[]>([]);
+
+  useEffect(() => {
+    const d = readDraft();
+    if (!d) { router.push("/"); return; }
+    setDraft(d);
+    const defaultPickup = stationOf(d.from) ?? cityOf(d.from);
+    setPassengers(
+      Array.from({ length: d.paxCount }, () => ({ ...EMPTY_PAX, pickup: defaultPickup }))
+    );
+    setReady(true);
+  }, [router]);
+
+  const updatePax = (i: number, field: keyof PassengerInfo, value: string) => {
     setPassengers(prev => prev.map((p, idx) => idx === i ? { ...p, [field]: value } : p));
+    setErrors(prev => {
+      if (!prev[i]?.[field as keyof FieldErrors]) return prev;
+      return prev.map((e, idx) => idx === i ? { ...e, [field]: undefined } : e);
+    });
   };
 
   const addPassenger = () => {
-    setPassengers(prev => [...prev, { ...EMPTY_PAX }]);
+    if (passengers.length >= 9) return;
+    const base = draft?.from ?? "";
+    const defaultPickup = stationOf(base) ?? (cityOf(base) || "สถานีขนส่งสายใต้ใหม่");
+    setPassengers(prev => [...prev, { ...EMPTY_PAX, pickup: defaultPickup }]);
+    setErrors(prev => [...prev, {}]);
   };
 
-  const PRICE_PER = 427;
-  const total = passengers.length * PRICE_PER;
+  const validate = (): boolean => {
+    const errs: FieldErrors[] = passengers.map(p => {
+      const e: FieldErrors = {};
+      if (!p.firstName.trim()) e.firstName = "กรุณากรอกชื่อ";
+      if (!p.lastName.trim())  e.lastName  = "กรุณากรอกนามสกุล";
+
+      const idDigits = p.idNumber.replace(/\D/g, "");
+      if (!p.idNumber.trim()) {
+        e.idNumber = "กรุณากรอกเลขบัตรประจำตัว";
+      } else if (p.idType === "citizen" && idDigits.length !== 13) {
+        e.idNumber = "เลขบัตรประชาชนต้องมี 13 หลัก";
+      }
+
+      const phoneDigits = p.phone.replace(/\D/g, "");
+      if (!p.phone.trim()) {
+        e.phone = "กรุณากรอกเบอร์โทรศัพท์";
+      } else if (phoneDigits.length < 9 || phoneDigits.length > 10) {
+        e.phone = "เบอร์โทรศัพท์ต้องมี 9-10 หลัก";
+      }
+
+      if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
+        e.email = "รูปแบบอีเมลไม่ถูกต้อง";
+      }
+
+      return e;
+    });
+    setErrors(errs);
+    return errs.every(e => Object.keys(e).length === 0);
+  };
+
+  if (!ready || !draft) return null;
+
+  const pricePerSeat = draft.pricePerSeat;
+  const total        = passengers.length * pricePerSeat;
+
+  const handleNext = () => {
+    if (!validate()) return;
+    writeDraft({ ...draft, passengers });
+    router.push("/seat");
+  };
+
+  const baseCls = "w-full border rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f9fafb]">
@@ -74,139 +142,157 @@ export default function PassengerPage() {
           </div>
 
           {/* Passenger forms */}
-          {passengers.map((pax, i) => (
-            <div key={i} className="bg-white rounded-xl border border-[#ece9ec] shadow-[0px_1px_1.5px_rgba(0,0,0,0.05)] overflow-hidden">
-              <div className="bg-[#f9fafb] border-b border-[#ece9ec] px-5 py-3">
-                <h3 className="text-[15px] font-semibold text-[#101828]">ผู้โดยสารลำดับที่ {i + 1}</h3>
-              </div>
-              <div className="p-5 flex flex-col gap-4">
-                {/* Pickup */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">จุดรับผู้โดยสาร</label>
-                  <select
-                    value={pax.pickup}
-                    onChange={e => updatePax(i, "pickup", e.target.value)}
-                    className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82] bg-white"
-                  >
-                    <option>สถานีขนส่งสายใต้ใหม่</option>
-                    <option>สถานีขนส่งหมอชิต 2</option>
-                    <option>สถานีขนส่งเอกมัย</option>
-                  </select>
+          {passengers.map((pax, i) => {
+            const e = errors[i] ?? {};
+            return (
+              <div key={i} className="bg-white rounded-xl border border-[#ece9ec] shadow-[0px_1px_1.5px_rgba(0,0,0,0.05)] overflow-hidden">
+                <div className="bg-[#f9fafb] border-b border-[#ece9ec] px-5 py-3">
+                  <h3 className="text-[15px] font-semibold text-[#101828]">ผู้โดยสารลำดับที่ {i + 1}</h3>
                 </div>
-
-                {/* Name row */}
-                <div className="flex gap-3">
-                  <div className="w-[120px]">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">คำนำหน้า</label>
+                <div className="p-5 flex flex-col gap-4">
+                  {/* Pickup */}
+                  <div>
+                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">จุดรับผู้โดยสาร</label>
                     <select
-                      value={pax.title}
-                      onChange={e => updatePax(i, "title", e.target.value)}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82] bg-white"
+                      value={pax.pickup}
+                      onChange={ev => updatePax(i, "pickup", ev.target.value)}
+                      className={`${baseCls} border-[#d0d5dd] focus:ring-[#171b82] focus:border-[#171b82] bg-white`}
                     >
-                      <option>นาย</option>
-                      <option>นาง</option>
-                      <option>นางสาว</option>
-                      <option>เด็กชาย</option>
-                      <option>เด็กหญิง</option>
+                      <option>สถานีขนส่งสายใต้ใหม่</option>
+                      <option>สถานีขนส่งหมอชิต 2</option>
+                      <option>สถานีขนส่งเอกมัย</option>
                     </select>
                   </div>
-                  <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">ชื่อ</label>
-                    <input
-                      value={pax.firstName}
-                      onChange={e => updatePax(i, "firstName", e.target.value)}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82]"
-                      placeholder="ชื่อ"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">นามสกุล</label>
-                    <input
-                      value={pax.lastName}
-                      onChange={e => updatePax(i, "lastName", e.target.value)}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82]"
-                      placeholder="นามสกุล"
-                    />
-                  </div>
-                </div>
 
-                {/* ID type + number */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">ประเภทบัตรประจำตัว</label>
-                  <div className="flex gap-4 mb-2">
-                    {([["citizen", "เลขประจำตัวประชาชน"], ["passport", "หนังสือเดินทาง"]] as const).map(([val, label]) => (
-                      <label key={val} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="radio"
-                          checked={pax.idType === val}
-                          onChange={() => updatePax(i, "idType", val)}
-                          className="accent-[#171b82]"
-                        />
-                        <span className="text-[13.5px] text-[#344054]">{label}</span>
-                      </label>
-                    ))}
-                  </div>
-                  <input
-                    value={pax.idNumber}
-                    onChange={e => updatePax(i, "idNumber", e.target.value)}
-                    className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82] focus:border-[#171b82]"
-                    placeholder={pax.idType === "citizen" ? "เลขบัตรประชาชน 13 หลัก" : "หมายเลขหนังสือเดินทาง"}
-                  />
-                </div>
-
-                {/* Gender */}
-                <div>
-                  <label className="block text-[13px] font-medium text-[#344054] mb-1.5">ประเภทผู้โดยสาร</label>
-                  <div className="flex gap-2">
-                    {([["male", "ชาย"], ["female", "หญิง"], ["child", "เด็ก"]] as const).map(([val, label]) => (
-                      <button
-                        key={val}
-                        onClick={() => updatePax(i, "gender", val)}
-                        className={`px-5 py-2 rounded-lg text-[14px] font-medium border ${
-                          pax.gender === val
-                            ? "bg-[#171b82] text-white border-[#171b82]"
-                            : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-[#f9fafb]"
-                        }`}
+                  {/* Name row */}
+                  <div className="flex gap-3">
+                    <div className="w-[120px]">
+                      <label className="block text-[13px] font-medium text-[#344054] mb-1.5">คำนำหน้า</label>
+                      <select
+                        value={pax.title}
+                        onChange={ev => updatePax(i, "title", ev.target.value)}
+                        className={`${baseCls} border-[#d0d5dd] focus:ring-[#171b82] bg-white`}
                       >
-                        {label}
-                      </button>
-                    ))}
+                        <option>นาย</option>
+                        <option>นาง</option>
+                        <option>นางสาว</option>
+                        <option>เด็กชาย</option>
+                        <option>เด็กหญิง</option>
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                        ชื่อ <span className="text-[#f04438]">*</span>
+                      </label>
+                      <input
+                        value={pax.firstName}
+                        onChange={ev => updatePax(i, "firstName", ev.target.value)}
+                        className={`${baseCls} ${errCls(e.firstName)}`}
+                        placeholder="ชื่อ"
+                      />
+                      <FieldError msg={e.firstName} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                        นามสกุล <span className="text-[#f04438]">*</span>
+                      </label>
+                      <input
+                        value={pax.lastName}
+                        onChange={ev => updatePax(i, "lastName", ev.target.value)}
+                        className={`${baseCls} ${errCls(e.lastName)}`}
+                        placeholder="นามสกุล"
+                      />
+                      <FieldError msg={e.lastName} />
+                    </div>
                   </div>
-                </div>
 
-                {/* Phone + Email */}
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">เบอร์โทรศัพท์</label>
+                  {/* ID type + number */}
+                  <div>
+                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                      ประเภทบัตรประจำตัว <span className="text-[#f04438]">*</span>
+                    </label>
+                    <div className="flex gap-4 mb-2">
+                      {([["citizen", "เลขประจำตัวประชาชน"], ["passport", "หนังสือเดินทาง"]] as const).map(([val, label]) => (
+                        <label key={val} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={pax.idType === val}
+                            onChange={() => updatePax(i, "idType", val)}
+                            className="accent-[#171b82]"
+                          />
+                          <span className="text-[13.5px] text-[#344054]">{label}</span>
+                        </label>
+                      ))}
+                    </div>
                     <input
-                      value={pax.phone}
-                      onChange={e => updatePax(i, "phone", e.target.value)}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82]"
-                      placeholder="0812345678"
+                      value={pax.idNumber}
+                      onChange={ev => updatePax(i, "idNumber", ev.target.value)}
+                      className={`${baseCls} ${errCls(e.idNumber)}`}
+                      placeholder={pax.idType === "citizen" ? "เลขบัตรประชาชน 13 หลัก" : "หมายเลขหนังสือเดินทาง"}
                     />
+                    <FieldError msg={e.idNumber} />
                   </div>
-                  <div className="flex-1">
-                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">อีเมล</label>
-                    <input
-                      value={pax.email}
-                      onChange={e => updatePax(i, "email", e.target.value)}
-                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[14px] text-[#101828] outline-none focus:ring-1 focus:ring-[#171b82]"
-                      placeholder="example@email.com"
-                    />
+
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-[13px] font-medium text-[#344054] mb-1.5">ประเภทผู้โดยสาร</label>
+                    <div className="flex gap-2">
+                      {([["male", "ชาย"], ["female", "หญิง"], ["child", "เด็ก"]] as const).map(([val, label]) => (
+                        <button
+                          key={val}
+                          onClick={() => updatePax(i, "gender", val)}
+                          className={`px-5 py-2 rounded-lg text-[14px] font-medium border ${
+                            pax.gender === val
+                              ? "bg-[#171b82] text-white border-[#171b82]"
+                              : "bg-white text-[#344054] border-[#d0d5dd] hover:bg-[#f9fafb]"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Phone + Email */}
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <label className="block text-[13px] font-medium text-[#344054] mb-1.5">
+                        เบอร์โทรศัพท์ <span className="text-[#f04438]">*</span>
+                      </label>
+                      <input
+                        value={pax.phone}
+                        onChange={ev => updatePax(i, "phone", ev.target.value)}
+                        className={`${baseCls} ${errCls(e.phone)}`}
+                        placeholder="0812345678"
+                      />
+                      <FieldError msg={e.phone} />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-[13px] font-medium text-[#344054] mb-1.5">อีเมล</label>
+                      <input
+                        value={pax.email}
+                        onChange={ev => updatePax(i, "email", ev.target.value)}
+                        className={`${baseCls} ${errCls(e.email)}`}
+                        placeholder="example@email.com"
+                      />
+                      <FieldError msg={e.email} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Add passenger */}
-          <button
-            onClick={addPassenger}
-            className="bg-white border-2 border-dashed border-[#d0d5dd] rounded-xl py-4 flex items-center justify-center gap-2 text-[14px] font-semibold text-[#667085] hover:border-[#171b82] hover:text-[#171b82]"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
-            เพิ่มผู้โดยสาร
-          </button>
+          {passengers.length < 9 && (
+            <button
+              onClick={addPassenger}
+              className="bg-white border-2 border-dashed border-[#d0d5dd] rounded-xl py-4 flex items-center justify-center gap-2 text-[14px] font-semibold text-[#667085] hover:border-[#171b82] hover:text-[#171b82]"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14"/></svg>
+              เพิ่มผู้โดยสาร
+            </button>
+          )}
         </div>
 
         {/* Sidebar */}
@@ -214,37 +300,39 @@ export default function PassengerPage() {
           {/* Trip card */}
           <div className="bg-white rounded-xl border border-[#ece9ec] shadow-[0px_1px_1.5px_rgba(0,0,0,0.05)] overflow-hidden">
             <div className="bg-[#cd416e] px-4 py-3">
-              <p className="text-white font-semibold text-[14px]">กรุงเทพฯ - ขอนแก่น รถด่วน</p>
+              <p className="text-white font-semibold text-[14px]">{cityOf(draft.from)} – {cityOf(draft.to)} {draft.busType}</p>
             </div>
             <div className="p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="text-center">
-                  <div className="text-[22px] font-semibold text-[#101828]">09:00</div>
-                  <div className="text-[11px] text-[#667085]">กรุงเทพฯ</div>
+                  <div className="text-[22px] font-semibold text-[#101828]">{draft.dep}</div>
+                  <div className="text-[11px] text-[#667085]">{cityOf(draft.from)}</div>
                 </div>
                 <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
-                  <div className="text-[11px] text-[#667085]">6ชม. 30น.</div>
+                  <div className="text-[11px] text-[#667085]">{draft.dur}</div>
                   <div className="w-full h-px bg-[#d0d5dd] relative">
                     <svg className="absolute top-1/2 right-0 -translate-y-1/2" width="12" height="12" viewBox="0 0 24 24" fill="#9ca3af"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[22px] font-semibold text-[#101828]">15:30</div>
-                  <div className="text-[11px] text-[#667085]">ขอนแก่น</div>
+                  <div className="text-[22px] font-semibold text-[#101828]">{draft.arr}</div>
+                  <div className="text-[11px] text-[#667085]">{cityOf(draft.to)}</div>
                 </div>
               </div>
               <div className="text-[12.5px] text-[#667085] border-t border-[#f3f4f6] pt-3 flex flex-col gap-1">
                 <div className="flex justify-between">
                   <span>วันที่</span>
-                  <span className="text-[#344054] font-medium">ศ. 26 มิ.ย. 2569</span>
+                  <span className="text-[#344054] font-medium">{thaiDateLong(draft.date)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>ชั้นรถ</span>
-                  <span className="text-[#344054] font-medium">รถด่วน</span>
+                  <span className="text-[#344054] font-medium">{draft.busType}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>ต้นทาง</span>
-                  <span className="text-[#344054] font-medium">สถานีขนส่งสายใต้ใหม่</span>
+                  <span className="text-[#344054] font-medium text-right max-w-[160px] truncate">
+                    {stationOf(draft.from) ?? cityOf(draft.from)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -255,8 +343,11 @@ export default function PassengerPage() {
             <h4 className="text-[14px] font-semibold text-[#101828] mb-3">สรุปราคา</h4>
             <div className="flex flex-col gap-2 text-[13.5px]">
               <div className="flex justify-between text-[#667085]">
-                <span>เที่ยวไป x {passengers.length}</span>
-                <span className="text-[#344054]">{(PRICE_PER * passengers.length).toLocaleString()} บาท</span>
+                <span>เที่ยวไป x {passengers.length} ({pricePerSeat.toLocaleString()} บาท/ที่นั่ง)</span>
+              </div>
+              <div className="flex justify-between text-[#667085]">
+                <span />
+                <span className="text-[#344054]">{total.toLocaleString()} บาท</span>
               </div>
               <div className="border-t border-[#f3f4f6] pt-2 mt-1 flex justify-between font-semibold text-[#101828] text-[15px]">
                 <span>รวมทั้งหมด</span>
@@ -283,7 +374,7 @@ export default function PassengerPage() {
               <div className="text-[12px] text-[#667085]">ราคารวม ({passengers.length} ผู้โดยสาร)</div>
             </div>
             <button
-              onClick={() => router.push("/seat")}
+              onClick={handleNext}
               className="bg-[#171b82] text-white text-[15px] font-semibold px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#131566]"
             >
               ถัดไป · เลือกที่นั่ง

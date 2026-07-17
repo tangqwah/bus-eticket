@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
+import { readDraft, writeDraft, generateBookingNo, thaiDateLong, cityOf, type BookingDraft } from "@/lib/bookingStore";
 
 type PayMethod = "card" | "qr" | "promptpay" | "counter";
 
@@ -15,28 +16,41 @@ const METHODS = [
 
 export default function PaymentPage() {
   const router = useRouter();
-  const [method, setMethod] = useState<PayMethod>("card");
+
+  const [draft, setDraft]     = useState<BookingDraft | null>(null);
+  const [ready, setReady]     = useState(false);
+  const [method, setMethod]   = useState<PayMethod>("card");
   const [cardNum, setCardNum] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
-  const [name, setName] = useState("");
+  const [expiry, setExpiry]   = useState("");
+  const [cvv, setCvv]         = useState("");
+  const [name, setName]       = useState("");
   const [loading, setLoading] = useState(false);
-  const total = 854;
+
+  useEffect(() => {
+    const d = readDraft();
+    if (!d || !d.passengers || !d.seats) { router.push("/"); return; }
+    setDraft(d);
+    setReady(true);
+  }, [router]);
+
+  if (!ready || !draft || !draft.passengers || !draft.seats) return null;
+
+  const total     = draft.pricePerSeat * draft.passengers.length;
+  const seatList  = draft.seats.join(", ");
 
   const handlePay = () => {
+    const bookingNo = generateBookingNo();
+    writeDraft({ ...draft, bookingNo });
     setLoading(true);
     setTimeout(() => {
       router.push("/confirmation");
     }, 1800);
   };
 
-  const formatCard = (v: string) => {
-    const digits = v.replace(/\D/g, "").slice(0, 16);
-    return digits.replace(/(.{4})/g, "$1 ").trim();
-  };
+  const formatCard   = (v: string) => v.replace(/\D/g, "").slice(0, 16).replace(/(.{4})/g, "$1 ").trim();
   const formatExpiry = (v: string) => {
-    const digits = v.replace(/\D/g, "").slice(0, 4);
-    return digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+    const d = v.replace(/\D/g, "").slice(0, 4);
+    return d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d;
   };
 
   return (
@@ -135,7 +149,7 @@ export default function PaymentPage() {
               <div className="w-48 h-48 bg-[#f3f4f6] rounded-xl flex items-center justify-center border-2 border-[#e5e7eb]">
                 <div className="grid grid-cols-8 gap-0.5">
                   {Array.from({ length: 64 }).map((_, i) => (
-                    <div key={i} className={`w-2 h-2 ${Math.random() > 0.4 ? "bg-[#101828]" : "bg-white"}`} />
+                    <div key={i} className={`w-2 h-2 ${(i * 7 + 3) % 10 > 4 ? "bg-[#101828]" : "bg-white"}`} />
                   ))}
                 </div>
               </div>
@@ -174,17 +188,17 @@ export default function PaymentPage() {
             <h4 className="text-[15px] font-semibold text-[#101828] mb-4">สรุปการจอง</h4>
 
             <div className="bg-[#f9fafb] rounded-lg p-3 mb-4 text-[13px]">
-              <div className="font-semibold text-[#344054] mb-2">กรุงเทพฯ → ขอนแก่น</div>
+              <div className="font-semibold text-[#344054] mb-2">{cityOf(draft.from)} → {cityOf(draft.to)}</div>
               <div className="flex justify-between text-[#667085]">
-                <span>09:00 - 15:30</span>
-                <span>รถด่วน</span>
+                <span>{draft.dep} – {draft.arr}</span>
+                <span>{draft.busType}</span>
               </div>
-              <div className="text-[#667085] mt-1">ศ. 26 มิ.ย. 2569 · ที่นั่ง A3, B3</div>
+              <div className="text-[#667085] mt-1">{thaiDateLong(draft.date)} · ที่นั่ง {seatList}</div>
             </div>
 
             <div className="flex flex-col gap-2 text-[13.5px]">
               <div className="flex justify-between text-[#667085]">
-                <span>ค่าตั๋ว (2 ใบ)</span>
+                <span>ค่าตั๋ว ({draft.passengers.length} ใบ)</span>
                 <span className="text-[#344054]">{total.toLocaleString()} บาท</span>
               </div>
               <div className="flex justify-between text-[#667085]">

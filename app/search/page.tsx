@@ -1,8 +1,9 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
+import { writeDraft, buildDateStrip, thaiDateLong, cityOf } from "@/lib/bookingStore";
 
 const BUS_LOGO = "/assets/bks-bus-logo.png";
 
@@ -36,16 +37,6 @@ const BUSES: Bus[] = [
   { id: 7, no: "567", route: "กรุงเทพฯ – ขอนแก่น",         type: "รถมาตรฐาน",       typeColor: "#6b7280", dep: "23:00", arr: "05:30", nextDay: true,  dur: "6 ชม. 30 น.", seats: 5,  price: 380, seatClass: "ชั้น 3", amenities: [] },
 ];
 
-const DATE_STRIP = [
-  { day: "จ.",   date: "22 มิ.ย." },
-  { day: "อ.",   date: "23 มิ.ย." },
-  { day: "พ.",   date: "24 มิ.ย." },
-  { day: "พฤ.", date: "25 มิ.ย." },
-  { day: "ศ.",   date: "26 มิ.ย." },
-  { day: "ส.",   date: "27 มิ.ย." },
-  { day: "อา.", date: "28 มิ.ย." },
-];
-
 const BUS_TYPES: BusType[]    = ["รถด่วนพิเศษ VIP", "รถด่วนพิเศษ", "รถด่วน", "รถมาตรฐาน"];
 const SEAT_CLASSES: SeatClass[] = ["ชั้น 1", "ชั้น 2", "ชั้น 3"];
 const TIME_SLOTS               = ["00:00 – 06:00", "06:00 – 12:00", "12:00 – 18:00", "18:00 – 24:00"];
@@ -56,6 +47,8 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
   { key: "dur",   label: "เร็วสุด" },
   { key: "arr",   label: "ถึงเร็วสุด" },
 ];
+
+const DEFAULT_DATE = "2026-06-26";
 
 function timeToMin(t: string): number {
   const parts = t.split(":").map(Number) as [number, number];
@@ -101,13 +94,33 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
 export default function SearchPage() {
   const router = useRouter();
 
-  const [selectedDate, setSelectedDate] = useState(4);
+  const [searchState, setSearchState] = useState({ from: "กรุงเทพมหานคร", to: "ขอนแก่น", date: DEFAULT_DATE, pax: 1 });
+  const [currentDate, setCurrentDate] = useState(DEFAULT_DATE);
+  const [selectedDateIdx, setSelectedDateIdx] = useState(3);
+
   const [busNo, setBusNo]               = useState("");
   const [timeSlots, setTimeSlots]       = useState<string[]>([]);
   const [busTypes, setBusTypes]         = useState<BusType[]>([]);
   const [seatClasses, setSeatClasses]   = useState<SeatClass[]>([]);
   const [amenities, setAmenities]       = useState<string[]>([]);
   const [sort, setSort]                 = useState<SortKey>("dep");
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const from  = p.get("from")  || "กรุงเทพมหานคร";
+    const to    = p.get("to")    || "ขอนแก่น";
+    const date  = p.get("date")  || DEFAULT_DATE;
+    const pax   = Math.max(1, Number(p.get("pax") || 1));
+    setSearchState({ from, to, date, pax });
+    setCurrentDate(date);
+  }, []);
+
+  const dateStripData = useMemo(() => buildDateStrip(searchState.date), [searchState.date]);
+
+  const handleDateSelect = (i: number) => {
+    setSelectedDateIdx(i);
+    setCurrentDate(dateStripData[i].iso);
+  };
 
   const hasFilters = busNo || timeSlots.length || busTypes.length || seatClasses.length || amenities.length;
 
@@ -136,6 +149,26 @@ export default function SearchPage() {
     });
   }, [busNo, timeSlots, busTypes, seatClasses, amenities, sort]);
 
+  function handleSelectBus(bus: Bus) {
+    writeDraft({
+      from:         searchState.from,
+      to:           searchState.to,
+      date:         currentDate,
+      paxCount:     searchState.pax,
+      busNo:        bus.no,
+      busRoute:     bus.route,
+      busType:      bus.type,
+      busTypeColor: bus.typeColor,
+      dep:          bus.dep,
+      arr:          bus.arr,
+      nextDay:      bus.nextDay,
+      dur:          bus.dur,
+      seatClass:    bus.seatClass,
+      pricePerSeat: bus.price,
+    });
+    router.push("/passenger");
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f9fafb]">
       <Header />
@@ -145,13 +178,13 @@ export default function SearchPage() {
       <div className="bg-[#cd416e] text-white py-3">
         <div className="max-w-[1100px] mx-auto px-4 flex items-center justify-between text-[14px] font-medium">
           <div className="flex items-center gap-3">
-            <span className="font-semibold">กรุงเทพมหานคร</span>
+            <span className="font-semibold">{cityOf(searchState.from)}</span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            <span className="font-semibold">ขอนแก่น</span>
+            <span className="font-semibold">{cityOf(searchState.to)}</span>
             <span className="text-white/60 mx-1">·</span>
-            <span>ศ. 26 มิ.ย. 2569</span>
+            <span>{thaiDateLong(currentDate)}</span>
             <span className="text-white/60 mx-1">·</span>
-            <span>1 ผู้โดยสาร</span>
+            <span>{searchState.pax} ผู้โดยสาร</span>
           </div>
           <button
             onClick={() => router.push("/")}
@@ -167,17 +200,17 @@ export default function SearchPage() {
       <div className="bg-white border-b border-[#e5e7eb] shadow-sm">
         <div className="max-w-[1100px] mx-auto px-4">
           <div className="flex gap-1 py-2">
-            {DATE_STRIP.map((d, i) => (
+            {dateStripData.map((d, i) => (
               <button
                 key={i}
-                onClick={() => setSelectedDate(i)}
+                onClick={() => handleDateSelect(i)}
                 className={`flex flex-col items-center px-4 py-2 rounded-xl transition-all min-w-[76px] ${
-                  selectedDate === i
+                  selectedDateIdx === i
                     ? "bg-[#171b82] text-white"
                     : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
                 }`}
               >
-                <span className={`text-[11px] font-medium ${selectedDate === i ? "text-white/70" : "text-[#9ca3af]"}`}>{d.day}</span>
+                <span className={`text-[11px] font-medium ${selectedDateIdx === i ? "text-white/70" : "text-[#9ca3af]"}`}>{d.day}</span>
                 <span className="font-semibold text-[13px] mt-0.5">{d.date}</span>
               </button>
             ))}
@@ -368,7 +401,7 @@ export default function SearchPage() {
                           <div className="text-[11px] text-[#9ca3af] mt-0.5">บาท / ที่นั่ง</div>
                         </div>
                         <button
-                          onClick={() => router.push("/passenger")}
+                          onClick={() => handleSelectBus(bus)}
                           className="bg-[#171b82] text-white text-[13px] font-semibold px-5 py-2 rounded-lg hover:bg-[#131566] transition-colors whitespace-nowrap"
                         >
                           เลือกเที่ยวรถนี้

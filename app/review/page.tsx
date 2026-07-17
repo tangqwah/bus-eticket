@@ -1,16 +1,32 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
-
-const PASSENGERS = [
-  { name: "นายบ๊อบบี้ คิ้วบาก", idNumber: "1234567890123", seat: "A3", pickup: "สถานีขนส่งสายใต้ใหม่" },
-  { name: "นางสาวฮันนี่ สะเต้อ", idNumber: "9876543210987", seat: "B3", pickup: "สถานีขนส่งสายใต้ใหม่" },
-];
+import { readDraft, thaiDateLong, cityOf, stationOf, paxFullName, type BookingDraft } from "@/lib/bookingStore";
 
 export default function ReviewPage() {
   const router = useRouter();
-  const total = 427 * PASSENGERS.length;
+
+  const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const d = readDraft();
+    if (!d || !d.passengers || !d.seats) { router.push("/"); return; }
+    setDraft(d);
+    setReady(true);
+  }, [router]);
+
+  if (!ready || !draft || !draft.passengers || !draft.seats) return null;
+
+  const { passengers, seats } = draft;
+  const total = draft.pricePerSeat * passengers.length;
+
+  const fromCity    = cityOf(draft.from);
+  const fromStation = stationOf(draft.from);
+  const toCity      = cityOf(draft.to);
+  const toStation   = stationOf(draft.to);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f9fafb]">
@@ -28,28 +44,28 @@ export default function ReviewPage() {
             <div className="p-5">
               <div className="flex items-center gap-6 mb-4">
                 <div className="text-center">
-                  <div className="text-[28px] font-semibold text-[#101828]">09:00</div>
-                  <div className="text-[13px] text-[#667085]">กรุงเทพมหานคร</div>
-                  <div className="text-[12px] text-[#9ca3af]">สถานีขนส่งสายใต้ใหม่</div>
+                  <div className="text-[28px] font-semibold text-[#101828]">{draft.dep}</div>
+                  <div className="text-[13px] text-[#667085]">{fromCity}</div>
+                  {fromStation && <div className="text-[12px] text-[#9ca3af]">{fromStation}</div>}
                 </div>
                 <div className="flex-1 flex flex-col items-center gap-1">
-                  <div className="text-[12px] text-[#667085]">6ชม. 30น.</div>
+                  <div className="text-[12px] text-[#667085]">{draft.dur}</div>
                   <div className="flex-1 w-full h-px bg-[#d0d5dd] relative">
                     <svg className="absolute top-1/2 right-0 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="#9ca3af"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                   </div>
-                  <span className="text-[12px] text-[#667085] bg-[#f3f4f6] px-2 py-0.5 rounded-full">รถด่วน</span>
+                  <span className="text-[12px] text-[#667085] bg-[#f3f4f6] px-2 py-0.5 rounded-full">{draft.busType}</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-[28px] font-semibold text-[#101828]">15:30</div>
-                  <div className="text-[13px] text-[#667085]">ขอนแก่น</div>
-                  <div className="text-[12px] text-[#9ca3af]">สถานีขนส่งขอนแก่น</div>
+                  <div className="text-[28px] font-semibold text-[#101828]">{draft.arr}</div>
+                  <div className="text-[13px] text-[#667085]">{toCity}</div>
+                  {toStation && <div className="text-[12px] text-[#9ca3af]">{toStation}</div>}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-3 bg-[#f9fafb] rounded-lg p-3 text-[13px]">
                 {[
-                  ["วันที่เดินทาง", "ศ. 26 มิ.ย. 2569"],
-                  ["ชั้นรถ", "รถด่วน"],
-                  ["จำนวนผู้โดยสาร", `${PASSENGERS.length} คน`],
+                  ["วันที่เดินทาง", thaiDateLong(draft.date)],
+                  ["ชั้นรถ", draft.busType],
+                  ["จำนวนผู้โดยสาร", `${passengers.length} คน`],
                 ].map(([label, value]) => (
                   <div key={label}>
                     <div className="text-[#667085] mb-0.5">{label}</div>
@@ -67,7 +83,7 @@ export default function ReviewPage() {
               <button onClick={() => router.push("/passenger")} className="text-[13px] font-semibold text-[#171b82] hover:underline">แก้ไข</button>
             </div>
             <div className="divide-y divide-[#f3f4f6]">
-              {PASSENGERS.map((p, i) => (
+              {passengers.map((p, i) => (
                 <div key={i} className="p-5 flex items-start gap-4">
                   <div className="w-9 h-9 rounded-full bg-[#fff0f4] flex items-center justify-center shrink-0">
                     <span className="text-[14px] font-semibold text-[#cd416e]">{i + 1}</span>
@@ -75,15 +91,19 @@ export default function ReviewPage() {
                   <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
                     <div>
                       <span className="text-[#667085]">ชื่อ-นามสกุล: </span>
-                      <span className="font-semibold text-[#344054]">{p.name}</span>
+                      <span className="font-semibold text-[#344054]">{paxFullName(p)}</span>
                     </div>
                     <div>
                       <span className="text-[#667085]">ที่นั่ง: </span>
-                      <span className="font-semibold text-[#cd416e]">{p.seat}</span>
+                      <span className="font-semibold text-[#cd416e]">{seats[i]}</span>
                     </div>
                     <div>
                       <span className="text-[#667085]">เลขบัตร: </span>
-                      <span className="font-semibold text-[#344054]">{p.idNumber.replace(/(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})/, "$1-$2-$3-$4-$5")}</span>
+                      <span className="font-semibold text-[#344054]">
+                        {p.idNumber.length === 13
+                          ? p.idNumber.replace(/(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})/, "$1-$2-$3-$4-$5")
+                          : p.idNumber || "—"}
+                      </span>
                     </div>
                     <div>
                       <span className="text-[#667085]">จุดรับ: </span>
@@ -101,10 +121,10 @@ export default function ReviewPage() {
               <h3 className="text-[15px] font-semibold text-[#101828]">ที่นั่ง</h3>
               <button onClick={() => router.push("/seat")} className="text-[13px] font-semibold text-[#171b82] hover:underline">แก้ไข</button>
             </div>
-            <div className="p-5 flex gap-3">
-              {PASSENGERS.map((p, i) => (
-                <div key={i} className="flex-1 bg-[#fff0f4] rounded-lg p-3 text-center">
-                  <div className="text-[22px] font-semibold text-[#cd416e]">{p.seat}</div>
+            <div className="p-5 flex gap-3 flex-wrap">
+              {passengers.map((_, i) => (
+                <div key={i} className="flex-1 min-w-[80px] bg-[#fff0f4] rounded-lg p-3 text-center">
+                  <div className="text-[22px] font-semibold text-[#cd416e]">{seats[i]}</div>
                   <div className="text-[12px] text-[#667085] mt-0.5">ผู้โดยสารที่ {i + 1}</div>
                 </div>
               ))}
@@ -118,7 +138,7 @@ export default function ReviewPage() {
             <h4 className="text-[15px] font-semibold text-[#101828] mb-4">สรุปการชำระเงิน</h4>
             <div className="flex flex-col gap-2 text-[13.5px]">
               <div className="flex justify-between text-[#667085]">
-                <span>ค่าตั๋ว ({PASSENGERS.length} ใบ)</span>
+                <span>ค่าตั๋ว ({passengers.length} ใบ)</span>
                 <span className="text-[#344054]">{total.toLocaleString()} บาท</span>
               </div>
               <div className="flex justify-between text-[#667085]">

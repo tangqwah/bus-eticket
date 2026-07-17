@@ -3,29 +3,36 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
+import { readDraft, writeDraft, paxFullName, type BookingDraft } from "@/lib/bookingStore";
 
 const BOOKED = ["A1", "B2", "C1", "D1", "C2", "A4", "B4", "D3", "C5", "D6", "A7", "B6", "C7"];
-
-const PASSENGERS = [
-  { name: "นายบ๊อบบี้ คิ้วบาก" },
-  { name: "นางสาวฮันนี่ สะเต้อ" },
-];
-
-const ROWS = 9;
+const ROWS   = 9;
 
 export default function SeatPage() {
   const router = useRouter();
-  // seats[i] = seat ID assigned to passenger i, or null if unassigned
-  const [seats, setSeats] = useState<(string | null)[]>(PASSENGERS.map(() => null));
-  // which passenger is currently being assigned a seat
-  const [activePax, setActivePax] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState(14 * 60 + 45);
+
+  const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [ready, setReady] = useState(false);
+  const [seats, setSeats] = useState<(string | null)[]>([]);
+  const [activePax, setActivePax] = useState(0);
+  const [timeLeft, setTimeLeft]   = useState(14 * 60 + 45);
+
+  useEffect(() => {
+    const d = readDraft();
+    if (!d || !d.passengers) { router.push("/"); return; }
+    setDraft(d);
+    setSeats(d.passengers.map(() => null));
+    setReady(true);
+  }, [router]);
 
   useEffect(() => {
     const t = setInterval(() => setTimeLeft(s => Math.max(0, s - 1)), 1000);
     return () => clearInterval(t);
   }, []);
 
+  if (!ready || !draft || !draft.passengers) return null;
+
+  const passengers = draft.passengers;
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const ss = String(timeLeft % 60).padStart(2, "0");
 
@@ -33,35 +40,29 @@ export default function SeatPage() {
 
   const handleSeatClick = (id: string) => {
     if (BOOKED.includes(id)) return;
-
     const owner = ownerOf(id);
-
     if (owner === activePax) {
-      // Deselect own seat
       setSeats(prev => prev.map((s, i) => i === activePax ? null : s));
       return;
     }
-
-    if (owner !== -1) {
-      // Seat belongs to another passenger — do nothing
-      return;
-    }
-
-    // Assign to active passenger
+    if (owner !== -1) return;
     setSeats(prev => prev.map((s, i) => i === activePax ? id : s));
-
-    // Auto-advance to next passenger without a seat
     const next = seats.findIndex((s, i) => s === null && i !== activePax);
     if (next !== -1) setActivePax(next);
   };
 
-  const allAssigned = seats.every(s => s !== null);
+  const allAssigned = seats.length > 0 && seats.every(s => s !== null);
+
+  const handleNext = () => {
+    writeDraft({ ...draft, seats: seats as string[] });
+    router.push("/review");
+  };
 
   const SeatCell = ({ id }: { id: string }) => {
     const owner = ownerOf(id);
     const isBooked = BOOKED.includes(id);
     const isOwnedByActive = owner === activePax;
-    const isOwnedByOther = owner !== -1 && owner !== activePax;
+    const isOwnedByOther  = owner !== -1 && owner !== activePax;
 
     let cls = "";
     let content: React.ReactNode = <span className="text-[11px]">{id}</span>;
@@ -122,13 +123,12 @@ export default function SeatPage() {
               ))}
             </div>
 
-            {/* Column headers */}
+            {/* Seat map layout */}
             <div className="flex flex-col items-center gap-2">
               <div className="w-full max-w-[280px] bg-[#f9fafb] rounded-lg py-2 text-center text-[12px] text-[#9ca3af] font-medium border border-[#e5e7eb] mb-2">
                 🚌 คนขับ
               </div>
 
-              {/* Column labels */}
               <div className="flex items-center gap-2 mb-1">
                 <span className="w-5" />
                 <span className="w-10 text-center text-[11px] font-semibold text-[#9ca3af]">A</span>
@@ -138,7 +138,6 @@ export default function SeatPage() {
                 <span className="w-10 text-center text-[11px] font-semibold text-[#9ca3af]">D</span>
               </div>
 
-              {/* Seat rows */}
               <div className="flex flex-col gap-2">
                 {Array.from({ length: ROWS }, (_, i) => i + 1).map(row => (
                   <div key={row} className="flex items-center gap-2">
@@ -152,7 +151,6 @@ export default function SeatPage() {
                 ))}
               </div>
 
-              {/* Special rows */}
               <div className="w-full max-w-[280px] mt-2 flex flex-col gap-1">
                 {["ประตูฉุกเฉิน", "ห้องน้ำ", "ห้องนอน พขร."].map(label => (
                   <div key={label} className="bg-[#f9fafb] rounded-lg py-2 text-center text-[12px] text-[#9ca3af] font-medium border border-[#e5e7eb]">
@@ -171,9 +169,9 @@ export default function SeatPage() {
             <h4 className="text-[14px] font-semibold text-[#101828] mb-1">เลือกผู้โดยสาร</h4>
             <p className="text-[12px] text-[#667085] mb-3">คลิกชื่อผู้โดยสาร แล้วเลือกที่นั่งในผัง</p>
             <div className="flex flex-col gap-2">
-              {PASSENGERS.map((pax, i) => {
+              {passengers.map((pax, i) => {
                 const isActive = activePax === i;
-                const hasSeat = seats[i] !== null;
+                const hasSeat  = seats[i] !== null && seats[i] !== undefined;
                 return (
                   <button
                     key={i}
@@ -184,7 +182,6 @@ export default function SeatPage() {
                         : "border-[#e5e7eb] bg-white hover:border-[#d0d5dd]"
                     }`}
                   >
-                    {/* Number badge */}
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${
                       isActive ? "bg-[#cd416e] text-white" : hasSeat ? "bg-[#171b82] text-white" : "bg-[#f3f4f6] text-[#9ca3af]"
                     }`}>
@@ -193,14 +190,13 @@ export default function SeatPage() {
 
                     <div className="flex-1 min-w-0">
                       <div className={`text-[13px] font-semibold truncate ${isActive ? "text-[#cd416e]" : "text-[#344054]"}`}>
-                        {pax.name}
+                        {paxFullName(pax)}
                       </div>
                       {isActive && !hasSeat && (
                         <div className="text-[11px] text-[#cd416e] mt-0.5">กำลังเลือกที่นั่ง...</div>
                       )}
                     </div>
 
-                    {/* Seat badge */}
                     <div className={`text-[14px] font-semibold px-2.5 py-1 rounded-lg shrink-0 ${
                       hasSeat
                         ? "bg-[#cd416e] text-white"
@@ -213,7 +209,7 @@ export default function SeatPage() {
               })}
             </div>
 
-            {!allAssigned && (
+            {!allAssigned && seats.length > 0 && (
               <p className="text-[12px] text-[#cd416e] mt-3">
                 ยังเหลืออีก {seats.filter(s => s === null).length} ที่นั่งที่ต้องเลือก
               </p>
@@ -230,12 +226,12 @@ export default function SeatPage() {
           <div className="bg-white rounded-xl border border-[#ece9ec] shadow-[0px_1px_1.5px_rgba(0,0,0,0.05)] p-4">
             <h4 className="text-[14px] font-semibold text-[#101828] mb-3">สรุปราคา</h4>
             <div className="flex justify-between text-[13.5px] text-[#667085] mb-2">
-              <span>เที่ยวไป x {PASSENGERS.length}</span>
-              <span className="text-[#344054]">{(427 * PASSENGERS.length).toLocaleString()} บาท</span>
+              <span>เที่ยวไป x {passengers.length}</span>
+              <span className="text-[#344054]">{(draft.pricePerSeat * passengers.length).toLocaleString()} บาท</span>
             </div>
             <div className="border-t border-[#f3f4f6] pt-2 flex justify-between font-semibold text-[#101828] text-[15px]">
               <span>รวมทั้งหมด</span>
-              <span className="text-[#a43458]">{(427 * PASSENGERS.length).toLocaleString()} บาท</span>
+              <span className="text-[#a43458]">{(draft.pricePerSeat * passengers.length).toLocaleString()} บาท</span>
             </div>
           </div>
         </div>
@@ -253,11 +249,11 @@ export default function SeatPage() {
           </button>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-[20px] font-semibold text-[#a43458]">{(427 * PASSENGERS.length).toLocaleString()} บาท</div>
+              <div className="text-[20px] font-semibold text-[#a43458]">{(draft.pricePerSeat * passengers.length).toLocaleString()} บาท</div>
               <div className="text-[12px] text-[#667085]">ราคารวม</div>
             </div>
             <button
-              onClick={() => router.push("/review")}
+              onClick={handleNext}
               disabled={!allAssigned}
               className="bg-[#171b82] text-white text-[15px] font-semibold px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-[#131566] disabled:opacity-50 disabled:cursor-not-allowed"
             >

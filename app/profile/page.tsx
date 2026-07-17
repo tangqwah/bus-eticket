@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { readDraft, thaiDateLong, cityOf, stationOf, paxFullName, type BookingDraft } from "@/lib/bookingStore";
 
 type User = { username: string; name: string; email: string; phone: string };
 
@@ -107,6 +108,29 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
 
 type Booking = typeof MOCK_UPCOMING[0] | typeof MOCK_HISTORY[0];
 type UpcomingBooking = typeof MOCK_UPCOMING[0];
+
+function draftToUpcoming(draft: BookingDraft): UpcomingBooking {
+  const pax = draft.passengers ?? [];
+  return {
+    id: draft.bookingNo ?? "BKS-XXXXXX",
+    date: thaiDateLong(draft.date),
+    from: draft.from,
+    fromSub: stationOf(draft.from) ?? cityOf(draft.from),
+    to: draft.to,
+    toSub: stationOf(draft.to) ?? cityOf(draft.to),
+    depart: draft.dep,
+    arrive: draft.arr,
+    duration: draft.dur,
+    passengers: pax.length,
+    total: draft.pricePerSeat * pax.length,
+    type: draft.busType,
+    tickets: pax.map((p, i) => ({
+      name: paxFullName(p),
+      seat: draft.seats?.[i] ?? "—",
+      price: draft.pricePerSeat,
+    })),
+  };
+}
 
 function Barcode() {
   const seed = 42;
@@ -298,6 +322,7 @@ export default function ProfilePage() {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [ticketModal, setTicketModal] = useState<UpcomingBooking | null>(null);
+  const [draftBooking, setDraftBooking] = useState<BookingDraft | null>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem("bks_user");
@@ -305,6 +330,11 @@ export default function ProfilePage() {
     const u: User = JSON.parse(raw);
     setUser(u);
     setForm({ name: u.name, email: u.email, phone: u.phone });
+
+    const draft = readDraft();
+    if (draft?.bookingNo && draft.passengers && draft.seats) {
+      setDraftBooking(draft);
+    }
   }, []);
 
   const handleSave = () => {
@@ -449,28 +479,42 @@ export default function ProfilePage() {
           )}
 
           {/* My Booking */}
-          {active === "my-booking" && (
-            <div>
-              <SectionHeader title="การจองของฉัน" subtitle="ตั๋วที่กำลังจะเดินทาง" />
-              {MOCK_UPCOMING.length === 0 ? (
-                <div className="bg-white rounded-2xl border border-[#e5e7eb] p-12 text-center">
-                  <div className="text-[#d0d5dd] mb-3">
-                    <svg className="mx-auto" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="1" y="9" width="22" height="13" rx="2"/><path d="M17 9V6a5 5 0 00-10 0v3"/></svg>
+          {active === "my-booking" && (() => {
+            const realEntry = draftBooking ? draftToUpcoming(draftBooking) : null;
+            const allUpcoming = [
+              ...(realEntry ? [realEntry] : []),
+              ...MOCK_UPCOMING,
+            ];
+            return (
+              <div>
+                <SectionHeader title="การจองของฉัน" subtitle="ตั๋วที่กำลังจะเดินทาง" />
+                {allUpcoming.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-12 text-center">
+                    <div className="text-[#d0d5dd] mb-3">
+                      <svg className="mx-auto" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><rect x="1" y="9" width="22" height="13" rx="2"/><path d="M17 9V6a5 5 0 00-10 0v3"/></svg>
+                    </div>
+                    <p className="text-[14px] text-[#667085]">ไม่มีการจองที่กำลังจะมาถึง</p>
+                    <Link href="/" className="inline-block mt-4 bg-[#171b82] text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#131566]">จองตั๋วใหม่</Link>
                   </div>
-                  <p className="text-[14px] text-[#667085]">ไม่มีการจองที่กำลังจะมาถึง</p>
-                  <Link href="/" className="inline-block mt-4 bg-[#171b82] text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#131566]">จองตั๋วใหม่</Link>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {MOCK_UPCOMING.map(b => <BookingCard key={b.id} booking={b} showCancel onViewTicket={() => setTicketModal(b)} />)}
-                  <Link href="/" className="self-start flex items-center gap-2 bg-[#171b82] text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#131566]">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
-                    จองตั๋วเพิ่ม
-                  </Link>
-                </div>
-              )}
-            </div>
-          )}
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {allUpcoming.map(b => (
+                      <BookingCard
+                        key={b.id}
+                        booking={b}
+                        showCancel
+                        onViewTicket={() => setTicketModal(b)}
+                      />
+                    ))}
+                    <Link href="/" className="self-start flex items-center gap-2 bg-[#171b82] text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#131566]">
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
+                      จองตั๋วเพิ่ม
+                    </Link>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Booking History */}
           {active === "booking-history" && (

@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Kanit } from "next/font/google";
+import { Google_Sans } from "next/font/google";
 import "./globals.css";
 
-const kanit = Kanit({
-  variable: "--font-kanit",
-  subsets: ["thai", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+const googleSans = Google_Sans({
+  variable: "--font-google-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="th" className={`${kanit.variable} h-full`}>
+    <html lang="th" className={`${googleSans.variable} h-full`}>
       <body className="min-h-full bg-[#f9fafb]">{children}</body>
     </html>
   );

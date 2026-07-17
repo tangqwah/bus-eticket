@@ -1,24 +1,25 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import StepProgress from "@/components/StepProgress";
+import { readDraft, thaiDateLong, cityOf, stationOf, paxFullName, type BookingDraft } from "@/lib/bookingStore";
 
 const BKS_LOGO = "/assets/bks-logo.png";
 
-const BOOKING_NO = "BKS-7K4Q28";
+const GENDER_LABEL: Record<string, string> = {
+  male:   "ผู้ใหญ่ (ชาย)",
+  female: "ผู้ใหญ่ (หญิง)",
+  child:  "เด็ก",
+};
 
-const TICKETS = [
-  { name: "นายบ๊อบบี้ คิ้วบาก", seat: "A3", type: "ผู้ใหญ่" },
-  { name: "นางสาวฮันนี่ สะเต้อ", seat: "B3", type: "ผู้ใหญ่" },
-];
-
-function Barcode() {
-  const bars = Array.from({ length: 60 }, (_, i) => ({
-    width: [1, 2, 3][Math.floor(Math.random() * 3)],
-    gap: [1, 2][Math.floor(Math.random() * 2)],
-  }));
+function Barcode({ seed }: { seed: string }) {
+  const bars = Array.from({ length: 60 }, (_, i) => {
+    const v = ((seed.charCodeAt(i % seed.length) * (i + 1)) % 30) + 1;
+    return { width: v > 20 ? 3 : v > 10 ? 2 : 1, gap: v > 15 ? 2 : 1 };
+  });
   return (
-    <div className="flex items-center gap-0 h-12">
+    <div className="flex items-center h-12">
       {bars.map((b, i) => (
         <div key={i} className="flex" style={{ gap: `${b.gap}px` }}>
           <div style={{ width: `${b.width}px`, height: "48px", backgroundColor: "#101828" }} />
@@ -30,6 +31,33 @@ function Barcode() {
 }
 
 export default function ConfirmationPage() {
+  const [draft, setDraft] = useState<BookingDraft | null>(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const d = readDraft();
+    if (!d || !d.passengers || !d.seats) return;
+    setDraft(d);
+    setReady(true);
+  }, []);
+
+  if (!ready || !draft || !draft.passengers || !draft.seats) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#f9fafb]">
+        <Header />
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center px-4">
+          <p className="text-[16px] text-[#344054] font-semibold">ไม่พบข้อมูลการจอง</p>
+          <Link href="/" className="text-[14px] font-semibold text-[#171b82] hover:underline">กลับหน้าหลัก</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const { passengers, seats, bookingNo = "BKS-XXXXXX" } = draft;
+  const fromCity    = cityOf(draft.from);
+  const fromStation = stationOf(draft.from) ?? fromCity;
+  const toCity      = cityOf(draft.to);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f9fafb]">
       <Header />
@@ -49,13 +77,13 @@ export default function ConfirmationPage() {
             ตั๋วโดยสารอิเล็กทรอนิกส์ได้ถูกส่งไปยังอีเมลของท่านแล้ว
           </p>
           <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg px-5 py-2.5 text-[14px] text-[#065f46] font-medium">
-            หมายเลขการจอง: <span className="font-semibold text-[#047857]">{BOOKING_NO}</span>
+            หมายเลขการจอง: <span className="font-semibold text-[#047857]">{bookingNo}</span>
           </div>
         </div>
 
         {/* E-Tickets */}
         <div className="flex flex-col gap-5">
-          {TICKETS.map((ticket, i) => (
+          {passengers.map((pax, i) => (
             <div
               key={i}
               className="bg-white rounded-2xl border border-[#ece9ec] shadow-[0px_4px_16px_rgba(0,0,0,0.08)] overflow-hidden"
@@ -66,12 +94,12 @@ export default function ConfirmationPage() {
                   <img src={BKS_LOGO} alt="BKS" className="h-8 w-auto brightness-0 invert" />
                   <div>
                     <div className="text-white/80 text-[11px] font-medium uppercase tracking-wider">ตั๋วโดยสารอิเล็กทรอนิกส์ / E-Ticket</div>
-                    <div className="text-white text-[13px] font-semibold">เที่ยวเดียว · {ticket.type}</div>
+                    <div className="text-white text-[13px] font-semibold">เที่ยวเดียว · {GENDER_LABEL[pax.gender] ?? "ผู้โดยสาร"}</div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-white/70 text-[11px]">เลขที่การจอง</div>
-                  <div className="text-white text-[16px] font-semibold tracking-wider">{BOOKING_NO}</div>
+                  <div className="text-white text-[16px] font-semibold tracking-wider">{bookingNo}</div>
                 </div>
               </div>
 
@@ -80,34 +108,33 @@ export default function ConfirmationPage() {
                 {/* Route */}
                 <div className="flex items-center gap-4 mb-5">
                   <div className="text-center">
-                    <div className="text-[26px] font-semibold text-[#101828]">09:00</div>
-                    <div className="text-[13px] font-semibold text-[#344054]">กรุงเทพมหานคร</div>
-                    <div className="text-[11px] text-[#9ca3af] mt-0.5">สถานีขนส่งสายใต้ใหม่</div>
+                    <div className="text-[26px] font-semibold text-[#101828]">{draft.dep}</div>
+                    <div className="text-[13px] font-semibold text-[#344054]">{fromCity}</div>
+                    <div className="text-[11px] text-[#9ca3af] mt-0.5">{fromStation}</div>
                   </div>
                   <div className="flex-1 flex flex-col items-center gap-1">
-                    <div className="text-[11px] text-[#9ca3af]">6 ชั่วโมง 30 นาที</div>
+                    <div className="text-[11px] text-[#9ca3af]">{draft.dur}</div>
                     <div className="w-full h-px bg-[#d0d5dd] relative">
                       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#d0d5dd]" />
                       <svg className="absolute top-1/2 right-0 -translate-y-1/2" width="14" height="14" viewBox="0 0 24 24" fill="#9ca3af"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                     </div>
-                    <span className="text-[11px] bg-[#f3f4f6] text-[#667085] px-2 py-0.5 rounded-full font-medium">รถด่วน</span>
+                    <span className="text-[11px] bg-[#f3f4f6] text-[#667085] px-2 py-0.5 rounded-full font-medium">{draft.busType}</span>
                   </div>
                   <div className="text-center">
-                    <div className="text-[26px] font-semibold text-[#101828]">15:30</div>
-                    <div className="text-[13px] font-semibold text-[#344054]">ขอนแก่น</div>
-                    <div className="text-[11px] text-[#9ca3af] mt-0.5">สถานีขนส่งขอนแก่น</div>
+                    <div className="text-[26px] font-semibold text-[#101828]">{draft.arr}</div>
+                    <div className="text-[13px] font-semibold text-[#344054]">{toCity}</div>
                   </div>
                 </div>
 
                 {/* Details grid */}
                 <div className="grid grid-cols-3 gap-3 bg-[#f9fafb] rounded-xl p-4 mb-5 text-[13px]">
                   {[
-                    ["วันที่เดินทาง", "ศ. 26 มิ.ย. 2569"],
-                    ["ผู้โดยสาร", ticket.name],
-                    ["ที่นั่ง", ticket.seat],
-                    ["เลขที่ตั๋ว", `${BOOKING_NO}-${i + 1}`],
-                    ["ราคา", "427 บาท"],
-                    ["จุดรับ", "สายใต้ใหม่"],
+                    ["วันที่เดินทาง", thaiDateLong(draft.date)],
+                    ["ผู้โดยสาร", paxFullName(pax)],
+                    ["ที่นั่ง", seats[i]],
+                    ["เลขที่ตั๋ว", `${bookingNo}-${i + 1}`],
+                    ["ราคา", `${draft.pricePerSeat.toLocaleString()} บาท`],
+                    ["จุดรับ", pax.pickup],
                   ].map(([label, value]) => (
                     <div key={label}>
                       <div className="text-[#9ca3af] text-[11px] mb-0.5">{label}</div>
@@ -123,10 +150,10 @@ export default function ConfirmationPage() {
                   <div className="flex-1 border-t-2 border-dashed border-[#e5e7eb]" />
                 </div>
 
-                {/* Barcode section */}
+                {/* Barcode */}
                 <div className="flex flex-col items-center gap-3">
-                  <Barcode />
-                  <div className="text-[16px] font-semibold text-[#101828] tracking-[0.2em]">{BOOKING_NO}</div>
+                  <Barcode seed={`${bookingNo}-${i}`} />
+                  <div className="text-[16px] font-semibold text-[#101828] tracking-[0.2em]">{bookingNo}</div>
                   <div className="text-[12px] text-[#667085] text-center">
                     แสดงรหัสนี้ที่ช่องตรวจตั๋วก่อนขึ้นรถ
                   </div>

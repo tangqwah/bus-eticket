@@ -349,7 +349,7 @@ export default function Home() {
               </div>
 
               <button
-                onClick={() => router.push("/search")}
+                onClick={() => router.push(`/search?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&date=${date}&pax=${passengers}`)}
                 className="bg-[#171b82] text-white text-[15px] font-semibold px-7 py-[11px] rounded-lg flex items-center gap-2 hover:bg-[#131566] shrink-0"
               >
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
