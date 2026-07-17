@@ -1,54 +1,18 @@
 "use client";
 import { useState } from "react";
-
-type TripStatus = "scheduled" | "ontime" | "departed" | "cancelled";
-
-type Trip = {
-  id: string;
-  date: string;
-  route: string;
-  from: string;
-  to: string;
-  depart: string;
-  arrive: string;
-  type: string;
-  sold: number;
-  total: number;
-  status: TripStatus;
-  revenue: number;
-};
-
-const MOCK_TRIPS: Trip[] = [
-  { id: "TRP-001", date: "15 ก.ค. 2569", route: "BKK-HKT", from: "สายใต้ใหม่", to: "ภูเก็ต", depart: "08:30", arrive: "21:00", type: "รถด่วนพิเศษ", sold: 36, total: 42, status: "departed", revenue: 21420 },
-  { id: "TRP-002", date: "15 ก.ค. 2569", route: "BKK-CNX", from: "หมอชิต 2", to: "เชียงใหม่", depart: "20:00", arrive: "07:30", type: "รถนอนปรับอากาศ", sold: 40, total: 44, status: "departed", revenue: 25920 },
-  { id: "TRP-003", date: "15 ก.ค. 2569", route: "BKK-CPN", from: "สายใต้ใหม่", to: "ชุมพร", depart: "07:00", arrive: "15:30", type: "รถด่วน", sold: 35, total: 40, status: "departed", revenue: 11200 },
-  { id: "TRP-004", date: "16 ก.ค. 2569", route: "BKK-SUG", from: "สายใต้ใหม่", to: "สุราษฎร์ธานี", depart: "09:30", arrive: "21:00", type: "รถด่วน", sold: 28, total: 40, status: "ontime", revenue: 12460 },
-  { id: "TRP-005", date: "16 ก.ค. 2569", route: "BKK-KKN", from: "หมอชิต 2", to: "ขอนแก่น", depart: "09:00", arrive: "15:30", type: "รถด่วน", sold: 38, total: 44, status: "ontime", revenue: 14440 },
-  { id: "TRP-006", date: "16 ก.ค. 2569", route: "BKK-PTY", from: "เอกมัย", to: "พัทยา", depart: "08:00", arrive: "10:30", type: "รถปรับอากาศ", sold: 22, total: 30, status: "ontime", revenue: 2640 },
-  { id: "TRP-007", date: "17 ก.ค. 2569", route: "BKK-HKT", from: "สายใต้ใหม่", to: "ภูเก็ต", depart: "08:30", arrive: "21:00", type: "รถด่วนพิเศษ", sold: 30, total: 42, status: "scheduled", revenue: 17850 },
-  { id: "TRP-008", date: "17 ก.ค. 2569", route: "BKK-CNX", from: "หมอชิต 2", to: "เชียงใหม่", depart: "20:00", arrive: "07:30", type: "รถนอนปรับอากาศ", sold: 18, total: 44, status: "scheduled", revenue: 11664 },
-  { id: "TRP-009", date: "17 ก.ค. 2569", route: "BKK-CPN", from: "สายใต้ใหม่", to: "ชุมพร", depart: "07:00", arrive: "15:30", type: "รถด่วน", sold: 35, total: 40, status: "scheduled", revenue: 11200 },
-  { id: "TRP-010", date: "17 ก.ค. 2569", route: "BKK-UDN", from: "หมอชิต 2", to: "อุดรธานี", depart: "09:00", arrive: "16:00", type: "รถด่วนพิเศษ", sold: 20, total: 42, status: "scheduled", revenue: 8400 },
-  { id: "TRP-011", date: "18 ก.ค. 2569", route: "BKK-HKT", from: "สายใต้ใหม่", to: "ภูเก็ต", depart: "08:30", arrive: "21:00", type: "รถด่วนพิเศษ", sold: 12, total: 42, status: "scheduled", revenue: 7140 },
-  { id: "TRP-012", date: "18 ก.ค. 2569", route: "BKK-UBN", from: "หมอชิต 2", to: "อุบลราชธานี", depart: "08:00", arrive: "17:00", type: "รถด่วน", sold: 8, total: 44, status: "cancelled", revenue: 0 },
-];
-
-const STATUS_MAP: Record<TripStatus, { label: string; cls: string }> = {
-  scheduled: { label: "กำหนดการ",      cls: "bg-[#f0f2ff] text-[#171b82]" },
-  ontime:    { label: "กำลังดำเนินการ", cls: "bg-[#d1fae5] text-[#059669]" },
-  departed:  { label: "เสร็จสิ้น",      cls: "bg-[#f3f4f6] text-[#667085]" },
-  cancelled: { label: "ยกเลิก",         cls: "bg-[#fee2e2] text-[#dc2626]" },
-};
+import { useRouter } from "next/navigation";
+import { MOCK_TRIPS, TRIP_STATUS_MAP, type TripStatus } from "@/lib/mockTrips";
 
 const STATUS_TABS: { key: TripStatus | "all"; label: string }[] = [
-  { key: "all", label: "ทั้งหมด" },
+  { key: "all",       label: "ทั้งหมด" },
   { key: "scheduled", label: "กำหนดการ" },
-  { key: "ontime", label: "กำลังดำเนินการ" },
-  { key: "departed", label: "เสร็จสิ้น" },
+  { key: "ontime",    label: "กำลังดำเนินการ" },
+  { key: "departed",  label: "เสร็จสิ้น" },
   { key: "cancelled", label: "ยกเลิก" },
 ];
 
 export default function TripsPage() {
+  const router = useRouter();
   const [statusFilter, setStatusFilter] = useState<TripStatus | "all">("all");
   const [search, setSearch] = useState("");
 
@@ -74,7 +38,6 @@ export default function TripsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4 flex items-center gap-4">
-        {/* Search */}
         <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3 py-2 flex-1 max-w-xs">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
           <input
@@ -90,7 +53,6 @@ export default function TripsPage() {
           )}
         </div>
 
-        {/* Status tabs */}
         <div className="flex items-center gap-1">
           {STATUS_TABS.map(tab => (
             <button
@@ -125,9 +87,13 @@ export default function TripsPage() {
               </tr>
             ) : filtered.map(t => {
               const pct = Math.round((t.sold / t.total) * 100);
-              const st = STATUS_MAP[t.status];
+              const st = TRIP_STATUS_MAP[t.status];
               return (
-                <tr key={t.id} className="hover:bg-[#f9fafb] transition-colors">
+                <tr
+                  key={t.id}
+                  onClick={() => router.push(`/backoffice/trips/${t.id}`)}
+                  className="hover:bg-[#f9fafb] transition-colors cursor-pointer"
+                >
                   <td className="px-5 py-3.5 font-mono text-[12px] font-semibold text-[#344054]">{t.id}</td>
                   <td className="px-5 py-3.5 text-[#667085] whitespace-nowrap">{t.date}</td>
                   <td className="px-5 py-3.5">
@@ -161,9 +127,7 @@ export default function TripsPage() {
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${st.cls}`}>{st.label}</span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <button className="text-[#667085] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
-                    </button>
+                    <span className="text-[12px] font-semibold text-[#171b82] hover:underline whitespace-nowrap">ดูรายละเอียด →</span>
                   </td>
                 </tr>
               );

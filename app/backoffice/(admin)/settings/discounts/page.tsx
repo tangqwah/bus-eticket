@@ -19,121 +19,354 @@ const DEFAULTS: Settings = {
   renewalReminderDays: 30,
 };
 
-function DiscountCard({
-  title,
-  subtitle,
-  icon,
-  iconBg,
-  value,
-  onChange,
-}: {
-  title: string;
-  subtitle: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  value: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
-      <div className="flex items-center gap-3 mb-5">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
-          {icon}
-        </div>
-        <div>
-          <div className="text-[14px] font-bold text-[#101828]">{title}</div>
-          <div className="text-[12px] text-[#667085] mt-0.5">{subtitle}</div>
-        </div>
-      </div>
+/* ── Modal ───────────────────────────────────────────────────── */
 
-      <div className="flex items-center gap-4 mb-4">
-        <div className="text-[44px] font-black text-[#101828] leading-none w-24 text-center">{value}</div>
-        <div className="flex-1 flex flex-col gap-3">
-          <div className="text-[12px] font-semibold text-[#667085]">ปรับส่วนลด (%)</div>
-          <input
-            type="range"
-            min={0}
-            max={100}
-            step={5}
-            value={value}
-            onChange={e => onChange(Number(e.target.value))}
-            className="w-full accent-[#171b82] h-2"
-          />
-          <div className="flex justify-between text-[10px] text-[#9ca3af] font-medium">
-            <span>0%</span>
-            <span>25%</span>
-            <span>50%</span>
-            <span>75%</span>
-            <span>100%</span>
+type DiscountModalProps = {
+  title: string;
+  value: number;
+  onClose: () => void;
+  onSave: (v: number) => void;
+};
+
+function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModalProps) {
+  const [draft, setDraft] = useState(initial);
+  const presets = [0, 25, 50, 75, 100];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
+          <div className="text-[15px] font-bold text-[#101828]">แก้ไขส่วนลด — {title}</div>
+          <button
+            onClick={onClose}
+            className="text-[#9ca3af] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5 flex flex-col gap-5">
+          {/* Big value display */}
+          <div className="flex items-center justify-center">
+            <div className="text-[72px] font-black text-[#101828] leading-none tabular-nums">{draft}</div>
+            <div className="text-[28px] font-bold text-[#667085] self-end mb-3 ml-1">%</div>
+          </div>
+
+          {/* Slider */}
+          <div className="flex flex-col gap-2">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={draft}
+              onChange={e => setDraft(Number(e.target.value))}
+              className="w-full accent-[#171b82] h-2"
+            />
+            <div className="flex justify-between text-[10px] text-[#9ca3af] font-medium">
+              <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
+            </div>
+          </div>
+
+          {/* Presets */}
+          <div className="flex items-center gap-2">
+            {presets.map(p => (
+              <button
+                key={p}
+                onClick={() => setDraft(p)}
+                className={`flex-1 text-[12px] font-bold py-2 rounded-lg transition-colors ${
+                  draft === p
+                    ? "bg-[#0f1260] text-white"
+                    : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
+                }`}
+              >
+                {p}%
+              </button>
+            ))}
+          </div>
+
+          {/* Custom input */}
+          <div className="flex items-center gap-3">
+            <label className="text-[12px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
+            <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
+              <input
+                type="number"
+                min={0}
+                max={100}
+                value={draft}
+                onChange={e => setDraft(Math.min(100, Math.max(0, Number(e.target.value))))}
+                className="w-16 px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
+              />
+              <span className="pr-3 text-[13px] text-[#667085] font-medium">%</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center gap-3">
-        {[0, 25, 50, 75, 100].map(preset => (
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-[#f3f4f6] flex items-center justify-end gap-3">
           <button
-            key={preset}
-            onClick={() => onChange(preset)}
-            className={`flex-1 text-[12px] font-bold py-2 rounded-lg transition-colors ${
-              value === preset
-                ? "bg-[#0f1260] text-white"
-                : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
-            }`}
+            onClick={onClose}
+            className="text-[13px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
           >
-            {preset}%
+            ยกเลิก
           </button>
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center gap-2">
-        <div className="text-[12px] font-semibold text-[#344054]">กำหนดเอง:</div>
-        <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
-          <input
-            type="number"
-            min={0}
-            max={100}
-            value={value}
-            onChange={e => onChange(Math.min(100, Math.max(0, Number(e.target.value))))}
-            className="w-16 px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
-          />
-          <span className="pr-3 text-[13px] text-[#667085] font-medium">%</span>
+          <button
+            onClick={() => { onSave(draft); onClose(); }}
+            className="flex items-center gap-2 text-[13px] font-bold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            บันทึก
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+type RenewalModalProps = {
+  value: number;
+  onClose: () => void;
+  onSave: (v: number) => void;
+};
+
+function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
+  const [draft, setDraft] = useState(initial);
+  const presets = [7, 14, 30, 60, 90];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
+          <div className="text-[15px] font-bold text-[#101828]">แก้ไขการแจ้งเตือนก่อนหมดอายุ</div>
+          <button
+            onClick={onClose}
+            className="text-[#9ca3af] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <div className="px-6 py-5 flex flex-col gap-5">
+          <div className="flex items-center justify-center">
+            <div className="text-[72px] font-black text-[#b45309] leading-none tabular-nums">{draft}</div>
+            <div className="text-[18px] font-bold text-[#667085] self-end mb-4 ml-2">วัน</div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <input
+              type="range"
+              min={7}
+              max={90}
+              step={1}
+              value={draft}
+              onChange={e => setDraft(Number(e.target.value))}
+              className="w-full accent-[#b45309] h-2"
+            />
+            <div className="flex justify-between text-[10px] text-[#9ca3af] font-medium">
+              <span>7 วัน</span><span>30 วัน</span><span>60 วัน</span><span>90 วัน</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            {presets.map(d => (
+              <button
+                key={d}
+                onClick={() => setDraft(d)}
+                className={`text-[12px] font-bold px-4 py-2 rounded-lg transition-colors ${
+                  draft === d
+                    ? "bg-[#b45309] text-white"
+                    : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
+                }`}
+              >
+                {d} วัน
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <label className="text-[12px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
+            <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
+              <input
+                type="number"
+                min={7}
+                max={90}
+                value={draft}
+                onChange={e => setDraft(Math.min(90, Math.max(7, Number(e.target.value))))}
+                className="w-16 px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
+              />
+              <span className="pr-3 text-[12px] text-[#667085] font-medium whitespace-nowrap">วัน</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-[#f3f4f6] flex items-center justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="text-[13px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={() => { onSave(draft); onClose(); }}
+            className="flex items-center gap-2 text-[13px] font-bold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            บันทึก
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Display Card ─────────────────────────────────────────────── */
+
+type CardConfig = {
+  key: keyof Settings;
+  title: string;
+  subtitle: string;
+  iconBg: string;
+  icon: React.ReactNode;
+  unit: string;
+};
+
+function SettingCard({
+  config,
+  value,
+  onEdit,
+}: {
+  config: CardConfig;
+  value: number;
+  onEdit: () => void;
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 flex items-center gap-5">
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${config.iconBg}`}>
+        {config.icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[14px] font-bold text-[#101828]">{config.title}</div>
+        <div className="text-[12px] text-[#667085] mt-0.5">{config.subtitle}</div>
+      </div>
+      <div className="text-right mr-2 shrink-0">
+        <div className="text-[32px] font-black text-[#101828] leading-none tabular-nums">{value}{config.unit}</div>
+        <div className="text-[10px] text-[#9ca3af] font-medium mt-1">ค่าปัจจุบัน</div>
+      </div>
+      <button
+        onClick={onEdit}
+        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#171b82] border border-[#c7caee] bg-[#f0f2ff] hover:bg-[#e0e3ff] px-3.5 py-2 rounded-lg transition-colors shrink-0"
+      >
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        แก้ไข
+      </button>
+    </div>
+  );
+}
+
+/* ── Page ─────────────────────────────────────────────────────── */
+
+type ModalKey = keyof Settings | null;
+
 export default function DiscountSettingsPage() {
   const [settings, setSettings] = useState<Settings>(DEFAULTS);
   const [saved, setSaved] = useState(false);
-  const [dirty, setDirty] = useState(false);
+  const [modal, setModal] = useState<ModalKey>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem("bks_discount_settings");
     if (raw) setSettings(JSON.parse(raw));
   }, []);
 
-  const update = (key: keyof Settings, value: number) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-    setDirty(true);
-    setSaved(false);
-  };
-
-  const handleSave = () => {
-    localStorage.setItem("bks_discount_settings", JSON.stringify(settings));
+  const handleSave = (key: keyof Settings, value: number) => {
+    const next = { ...settings, [key]: value };
+    setSettings(next);
+    localStorage.setItem("bks_discount_settings", JSON.stringify(next));
     setSaved(true);
-    setDirty(false);
-    setTimeout(() => setSaved(false), 4000);
+    setTimeout(() => setSaved(false), 3000);
   };
 
   const handleReset = () => {
     setSettings(DEFAULTS);
-    setDirty(true);
-    setSaved(false);
+    localStorage.setItem("bks_discount_settings", JSON.stringify(DEFAULTS));
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
   };
 
+  const discountCards: CardConfig[] = [
+    {
+      key: "employeeDiscount",
+      title: "พนักงาน บขส.",
+      subtitle: "ส่วนลดค่าโดยสารสำหรับพนักงาน บขส.",
+      iconBg: "bg-[#f0f2ff] text-[#171b82]",
+      unit: "%",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+        </svg>
+      ),
+    },
+    {
+      key: "officialDiscount",
+      title: "ข้าราชการ/ทหาร",
+      subtitle: "ส่วนลดค่าโดยสารสำหรับข้าราชการและทหาร",
+      iconBg: "bg-[#f5f3ff] text-[#6d28d9]",
+      unit: "%",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      ),
+    },
+    {
+      key: "seniorDiscount",
+      title: "ผู้สูงอายุ",
+      subtitle: "อายุ 60 ปีขึ้นไป — ยืนยันด้วยบัตรประชาชน (ไม่มีวันหมดอายุ)",
+      iconBg: "bg-[#fffbeb] text-[#b45309]",
+      unit: "%",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      ),
+    },
+    {
+      key: "studentDiscount",
+      title: "เด็กนักเรียน/นักศึกษา",
+      subtitle: "ยืนยันด้วยบัตรนักเรียน/นักศึกษา (ต่ออายุปีละครั้ง)",
+      iconBg: "bg-[#f0fdfa] text-[#0f766e]",
+      unit: "%",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      ),
+    },
+    {
+      key: "disabledDiscount",
+      title: "ผู้พิการ",
+      subtitle: "ยืนยันด้วยบัตรประจำตัวคนพิการ (ต่ออายุตามกำหนด)",
+      iconBg: "bg-[#fff1f2] text-[#9f1239]",
+      unit: "%",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <circle cx="12" cy="4" r="2"/>
+          <path d="M9 10h4l2 8M9 10v5"/>
+          <circle cx="8" cy="19" r="2"/>
+          <circle cx="16" cy="19" r="2"/>
+          <path d="M15 15l1.5 4"/>
+        </svg>
+      ),
+    },
+  ];
+
   return (
-    <div className="flex flex-col gap-6 max-w-[860px]">
+    <div className="flex flex-col gap-4 max-w-[720px]">
       {/* Success toast */}
       {saved && (
         <div className="fixed top-5 right-5 z-50 flex items-center gap-3 bg-[#071a0c] text-white text-[13px] font-semibold px-4 py-3 rounded-xl shadow-lg">
@@ -156,181 +389,64 @@ export default function DiscountSettingsPage() {
         </div>
       </div>
 
-      {/* Discount cards — existing types */}
-      <div className="grid grid-cols-2 gap-4">
-        <DiscountCard
-          title="พนักงาน บขส."
-          subtitle="ส่วนลดค่าโดยสารสำหรับพนักงาน"
-          iconBg="bg-[#f0f2ff] text-[#171b82]"
-          icon={
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-              <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
-            </svg>
-          }
-          value={settings.employeeDiscount}
-          onChange={v => update("employeeDiscount", v)}
+      {/* Discount cards — 1 per row */}
+      {discountCards.map(card => (
+        <SettingCard
+          key={card.key}
+          config={card}
+          value={settings[card.key] as number}
+          onEdit={() => setModal(card.key)}
         />
-        <DiscountCard
-          title="ข้าราชการ/ทหาร"
-          subtitle="ส่วนลดค่าโดยสารสำหรับข้าราชการ"
-          iconBg="bg-[#f5f3ff] text-[#6d28d9]"
-          icon={
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          }
-          value={settings.officialDiscount}
-          onChange={v => update("officialDiscount", v)}
-        />
-      </div>
+      ))}
 
-      {/* Discount cards — new types */}
-      <div className="grid grid-cols-3 gap-4">
-        <DiscountCard
-          title="ผู้สูงอายุ"
-          subtitle="อายุ 60 ปีขึ้นไป (ไม่มีวันหมดอายุ)"
-          iconBg="bg-[#fffbeb] text-[#b45309]"
-          icon={
+      {/* Renewal reminder card */}
+      <SettingCard
+        config={{
+          key: "renewalReminderDays",
+          title: "การแจ้งเตือนก่อนหมดอายุ",
+          subtitle: "แจ้งเตือนเมื่อสิทธิ์สมาชิกใกล้หมดอายุ",
+          iconBg: "bg-[#fffbeb] text-[#b45309]",
+          unit: " วัน",
+          icon: (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
-            </svg>
-          }
-          value={settings.seniorDiscount}
-          onChange={v => update("seniorDiscount", v)}
-        />
-        <DiscountCard
-          title="เด็กนักเรียน/นักศึกษา"
-          subtitle="บัตรนักเรียน/นักศึกษา (ต่ออายุปีละครั้ง)"
-          iconBg="bg-[#f0fdfa] text-[#0f766e]"
-          icon={
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
-              <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-            </svg>
-          }
-          value={settings.studentDiscount}
-          onChange={v => update("studentDiscount", v)}
-        />
-        <DiscountCard
-          title="ผู้พิการ"
-          subtitle="บัตรประจำตัวคนพิการ (ต่ออายุตามกำหนด)"
-          iconBg="bg-[#fff1f2] text-[#9f1239]"
-          icon={
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <circle cx="12" cy="4" r="2"/>
-              <path d="M9 10h4l2 8M9 10v5"/>
-              <circle cx="8" cy="19" r="2"/>
-              <circle cx="16" cy="19" r="2"/>
-              <path d="M15 15l1.5 4"/>
-            </svg>
-          }
-          value={settings.disabledDiscount}
-          onChange={v => update("disabledDiscount", v)}
-        />
-      </div>
-
-      {/* Renewal reminder */}
-      <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
-        <div className="flex items-center gap-3 mb-5">
-          <div className="w-10 h-10 rounded-xl bg-[#fffbeb] flex items-center justify-center shrink-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="1.8">
               <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 01-3.46 0"/>
             </svg>
-          </div>
-          <div>
-            <div className="text-[14px] font-bold text-[#101828]">การแจ้งเตือนก่อนหมดอายุ</div>
-            <div className="text-[12px] text-[#667085] mt-0.5">แจ้งเตือนเมื่อสิทธิ์สมาชิกใกล้หมดอายุ</div>
-          </div>
-        </div>
+          ),
+        }}
+        value={settings.renewalReminderDays}
+        onEdit={() => setModal("renewalReminderDays")}
+      />
 
-        <div className="flex items-center gap-6">
-          <div className="flex-1 max-w-xs">
-            <label className="block text-[12px] font-semibold text-[#344054] mb-2">จำนวนวันก่อนหมดอายุ</label>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={7}
-                max={90}
-                step={1}
-                value={settings.renewalReminderDays}
-                onChange={e => update("renewalReminderDays", Number(e.target.value))}
-                className="flex-1 accent-[#b45309]"
-              />
-              <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
-                <input
-                  type="number"
-                  min={7}
-                  max={90}
-                  value={settings.renewalReminderDays}
-                  onChange={e => update("renewalReminderDays", Math.min(90, Math.max(7, Number(e.target.value))))}
-                  className="w-14 px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
-                />
-                <span className="pr-3 text-[12px] text-[#667085] font-medium whitespace-nowrap">วัน</span>
-              </div>
-            </div>
-            <div className="flex justify-between text-[10px] text-[#9ca3af] mt-1 font-medium">
-              <span>7 วัน</span>
-              <span>30 วัน</span>
-              <span>60 วัน</span>
-              <span>90 วัน</span>
-            </div>
-          </div>
-
-          <div className="bg-[#fffbeb] border border-[#fcd34d] rounded-xl px-5 py-4">
-            <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">แจ้งเตือนเมื่อ</div>
-            <div className="text-[24px] font-black text-[#b45309] leading-none">{settings.renewalReminderDays}</div>
-            <div className="text-[12px] text-[#b45309] font-semibold mt-1">วัน ก่อนหมดอายุ</div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {[7, 14, 30, 60, 90].map(d => (
-            <button
-              key={d}
-              onClick={() => update("renewalReminderDays", d)}
-              className={`text-[12px] font-semibold px-4 py-2 rounded-lg transition-colors ${
-                settings.renewalReminderDays === d
-                  ? "bg-[#b45309] text-white"
-                  : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
-              }`}
-            >
-              {d} วัน
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Save/Reset bar */}
+      {/* Footer bar */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] px-5 py-4 flex items-center justify-between">
-        <div className="text-[13px] text-[#667085]">
-          {dirty ? (
-            <span className="flex items-center gap-2 text-[#b45309]">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก
-            </span>
-          ) : (
-            <span className="text-[#9ca3af]">พนักงาน {settings.employeeDiscount}% · ข้าราชการ {settings.officialDiscount}% · ผู้สูงอายุ {settings.seniorDiscount}% · นักเรียน {settings.studentDiscount}% · ผู้พิการ {settings.disabledDiscount}% · แจ้งเตือน {settings.renewalReminderDays} วัน</span>
-          )}
+        <div className="text-[12px] text-[#9ca3af]">
+          พนักงาน {settings.employeeDiscount}% · ข้าราชการ {settings.officialDiscount}% · ผู้สูงอายุ {settings.seniorDiscount}% · นักเรียน {settings.studentDiscount}% · ผู้พิการ {settings.disabledDiscount}% · แจ้งเตือน {settings.renewalReminderDays} วัน
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={handleReset}
-            className="text-[13px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2 rounded-lg hover:bg-[#f3f4f6] transition-colors"
-          >
-            คืนค่าเริ่มต้น
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={!dirty}
-            className="flex items-center gap-2 text-[13px] font-bold px-5 py-2.5 rounded-xl transition-colors bg-[#0f1260] text-white hover:bg-[#171b82] disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            บันทึกการตั้งค่า
-          </button>
-        </div>
+        <button
+          onClick={handleReset}
+          className="text-[12px] font-semibold text-[#667085] hover:text-[#344054] px-3 py-2 rounded-lg hover:bg-[#f3f4f6] transition-colors shrink-0"
+        >
+          คืนค่าเริ่มต้น
+        </button>
       </div>
+
+      {/* Modals */}
+      {modal && modal !== "renewalReminderDays" && (
+        <DiscountModal
+          title={discountCards.find(c => c.key === modal)?.title ?? ""}
+          value={settings[modal] as number}
+          onClose={() => setModal(null)}
+          onSave={v => handleSave(modal, v)}
+        />
+      )}
+      {modal === "renewalReminderDays" && (
+        <RenewalModal
+          value={settings.renewalReminderDays}
+          onClose={() => setModal(null)}
+          onSave={v => handleSave("renewalReminderDays", v)}
+        />
+      )}
     </div>
   );
 }

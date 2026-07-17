@@ -76,6 +76,7 @@ function getPageTitle(pathname: string): string {
   if (pathname === "/backoffice/routes") return "จัดการเส้นทาง";
   if (pathname === "/backoffice/members") return "จัดการสมาชิก";
   if (pathname.startsWith("/backoffice/members/")) return "รายละเอียดสมาชิก";
+  if (pathname.startsWith("/backoffice/trips/")) return "รายละเอียดเที่ยวรถ";
   if (pathname.startsWith("/backoffice/settings")) return "ตั้งค่า";
   return "ระบบหลังบ้าน";
 }
