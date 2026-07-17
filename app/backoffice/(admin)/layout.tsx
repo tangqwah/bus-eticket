@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { MOCK_MEMBERS, type Member } from "@/lib/mockMembers";
 
 const BKS_LOGO = "/assets/bks-logo.png";
 
@@ -46,8 +47,18 @@ const NAV = [
     ),
   },
   {
+    href: "/backoffice/members/pending",
+    label: "รออนุมัติ",
+    pendingBadge: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+    ),
+  },
+  {
     href: "/backoffice/members",
-    label: "สมาชิก",
+    label: "สมาชิกทั้งหมด",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
         <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
@@ -74,22 +85,47 @@ function getPageTitle(pathname: string): string {
   if (pathname === "/backoffice/trips") return "เที่ยวรถและกำหนดการ";
   if (pathname === "/backoffice/bookings") return "การจองทั้งหมด";
   if (pathname === "/backoffice/routes") return "จัดการเส้นทาง";
-  if (pathname === "/backoffice/members") return "จัดการสมาชิก";
+  if (pathname === "/backoffice/members/pending") return "คำขอรอตรวจสอบ";
+  if (pathname === "/backoffice/members") return "สมาชิกทั้งหมด";
   if (pathname.startsWith("/backoffice/members/")) return "รายละเอียดสมาชิก";
   if (pathname.startsWith("/backoffice/trips/")) return "รายละเอียดเที่ยวรถ";
   if (pathname.startsWith("/backoffice/settings")) return "ตั้งค่า";
   return "ระบบหลังบ้าน";
 }
 
+function isNavActive(itemHref: string, pathname: string): boolean {
+  if (itemHref === "/backoffice/members/pending") {
+    return pathname === "/backoffice/members/pending";
+  }
+  if (itemHref === "/backoffice/members") {
+    return (
+      pathname === "/backoffice/members" ||
+      (pathname.startsWith("/backoffice/members/") && pathname !== "/backoffice/members/pending")
+    );
+  }
+  const activePrefix = itemHref === "/backoffice/settings/discounts" ? "/backoffice/settings" : itemHref;
+  return pathname === itemHref || pathname.startsWith(activePrefix + "/");
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [admin, setAdmin] = useState<{ name: string; role: string } | null>(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const raw = localStorage.getItem("bks_admin");
     if (!raw) { router.push("/backoffice/login"); return; }
     setAdmin(JSON.parse(raw));
+
+    const overridesRaw = localStorage.getItem("bks_member_overrides");
+    const overrides: Record<string, Partial<Member>> = overridesRaw ? JSON.parse(overridesRaw) : {};
+    const count = MOCK_MEMBERS.filter(m => {
+      const ov = overrides[m.id];
+      const status = ov?.status ?? m.status;
+      return status === "pending";
+    }).length;
+    setPendingCount(count);
   }, []);
 
   const handleLogout = () => {
@@ -119,8 +155,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1 overflow-y-auto">
           {NAV.map(item => {
-            const activePrefix = item.href === "/backoffice/settings/discounts" ? "/backoffice/settings" : item.href;
-            const active = pathname === item.href || pathname.startsWith(activePrefix + "/");
+            const active = isNavActive(item.href, pathname);
             return (
               <Link
                 key={item.href}
@@ -133,7 +168,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <span className={active ? "text-white" : "text-white/50"}>{item.icon}</span>
                 {item.label}
-                {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#cd416e]" />}
+                <div className="ml-auto flex items-center gap-1.5">
+                  {item.pendingBadge && pendingCount > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#cd416e] text-white min-w-[18px] text-center leading-tight">
+                      {pendingCount}
+                    </span>
+                  )}
+                  {active && <div className="w-1.5 h-1.5 rounded-full bg-[#cd416e]" />}
+                </div>
               </Link>
             );
           })}

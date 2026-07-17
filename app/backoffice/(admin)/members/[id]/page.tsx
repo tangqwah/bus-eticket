@@ -15,6 +15,7 @@ import {
   daysUntilExpiry,
   type Member,
   type MemberType,
+  type MemberStatus,
   type AuditEntry,
 } from "@/lib/mockMembers";
 
@@ -125,6 +126,9 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
   );
 }
 
+const ALL_MEMBER_TYPES: MemberType[] = ["general", "employee", "official", "senior", "student", "disabled"];
+const ALL_MEMBER_STATUSES: MemberStatus[] = ["pending", "approved", "rejected", "expired"];
+
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -133,6 +137,7 @@ export default function MemberDetailPage() {
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [reminderDays, setReminderDays] = useState(30);
   const [adminName, setAdminName] = useState("แอดมิน");
+  const [adminRole, setAdminRole] = useState("");
   const [defaultDiscount, setDefaultDiscount] = useState(0);
 
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -144,6 +149,13 @@ export default function MemberDetailPage() {
 
   const [successMsg, setSuccessMsg] = useState("");
 
+  // Edit mode (super_admin only)
+  const [editMode, setEditMode] = useState(false);
+  const [editMemberType, setEditMemberType] = useState<MemberType>("general");
+  const [editStatus, setEditStatus] = useState<MemberStatus>("pending");
+  const [editExpiryDate, setEditExpiryDate] = useState("");
+  const [editDiscount, setEditDiscount] = useState(0);
+
   useEffect(() => {
     const base = MOCK_MEMBERS.find(m => m.id === id);
     if (!base) { router.push("/backoffice/members"); return; }
@@ -152,6 +164,11 @@ export default function MemberDetailPage() {
     const overrides: Record<string, Partial<Member>> = overridesRaw ? JSON.parse(overridesRaw) : {};
     const merged = { ...base, ...(overrides[id] ?? {}) };
     setMember(merged);
+
+    setEditMemberType(merged.memberType);
+    setEditStatus(merged.status);
+    setEditExpiryDate(merged.expiryDate ?? "");
+    setEditDiscount(merged.discountPercent ?? 0);
 
     const logRaw = localStorage.getItem("bks_audit_log");
     const stored: StoredAuditEntry[] = logRaw ? JSON.parse(logRaw) : [];
@@ -189,6 +206,7 @@ export default function MemberDetailPage() {
     if (adminRaw) {
       const admin = JSON.parse(adminRaw);
       setAdminName(admin.name ?? "แอดมิน");
+      setAdminRole(admin.role ?? "");
     }
   }, [id]);
 
@@ -251,12 +269,44 @@ export default function MemberDetailPage() {
     setTimeout(() => setSuccessMsg(""), 4000);
   };
 
+  const handleEditSave = () => {
+    if (!member) return;
+    const changes: string[] = [];
+    if (editMemberType !== member.memberType)
+      changes.push(`ประเภท: ${MEMBER_TYPE_LABELS[member.memberType]} → ${MEMBER_TYPE_LABELS[editMemberType]}`);
+    if (editStatus !== member.status)
+      changes.push(`สถานะ: ${MEMBER_STATUS_LABELS[member.status]} → ${MEMBER_STATUS_LABELS[editStatus]}`);
+    const editHasExpiry = MEMBER_TYPE_HAS_EXPIRY[editMemberType];
+    const editNeedsDoc = MEMBER_TYPE_NEEDS_DOC[editMemberType];
+    if (editHasExpiry && editExpiryDate && editExpiryDate !== (member.expiryDate ?? ""))
+      changes.push(`วันหมดอายุ: ${isoToThai(editExpiryDate)}`);
+    if (editNeedsDoc && editDiscount !== (member.discountPercent ?? 0))
+      changes.push(`ส่วนลด: ${editDiscount}%`);
+
+    const patch: Partial<Member> = {
+      memberType: editMemberType,
+      status: editStatus,
+      ...(editHasExpiry && editExpiryDate ? { expiryDate: editExpiryDate } : {}),
+      ...(editNeedsDoc ? { discountPercent: editDiscount } : {}),
+    };
+    patchOverride(patch);
+    addAuditEntry(
+      "แก้ไขข้อมูล",
+      changes.length > 0 ? changes.join(", ") : "บันทึกข้อมูล (ไม่มีการเปลี่ยนแปลง)"
+    );
+    setMember(prev => prev ? { ...prev, ...patch } : null);
+    setEditMode(false);
+    setSuccessMsg("บันทึกการแก้ไขแล้ว");
+    setTimeout(() => setSuccessMsg(""), 4000);
+  };
+
   if (!member) return null;
 
   const hasDoc = MEMBER_TYPE_NEEDS_DOC[member.memberType];
   const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.memberType];
   const canAct = member.status === "pending" || member.status === "rejected";
   const expiringSoon = member.status === "approved" && isExpiringSoon(member.expiryDate, reminderDays);
+  const isSuperAdmin = adminRole === "super_admin";
 
   return (
     <div className="flex flex-col gap-5 max-w-[1100px]">
@@ -272,7 +322,7 @@ export default function MemberDetailPage() {
       <div className="flex items-center gap-2 text-[13px]">
         <Link href="/backoffice/members" className="text-[#667085] hover:text-[#344054] flex items-center gap-1.5 font-medium">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          จัดการสมาชิก
+          สมาชิกทั้งหมด
         </Link>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d0d5dd" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
         <span className="text-[#101828] font-semibold">{member.name}</span>
@@ -289,7 +339,7 @@ export default function MemberDetailPage() {
       )}
 
       <div className="grid grid-cols-[1fr_340px] gap-5 items-start">
-        {/* Left: Info + actions + audit log */}
+        {/* Left: Info + edit form + audit log */}
         <div className="flex flex-col gap-4">
           {/* Member info card */}
           <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
@@ -303,9 +353,11 @@ export default function MemberDetailPage() {
                 </div>
                 <div className="text-[12px] font-mono text-[#9ca3af]">{member.id}</div>
               </div>
-              <span className={`text-[12px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[member.status]}`}>
-                {MEMBER_STATUS_LABELS[member.status]}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-[12px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[member.status]}`}>
+                  {MEMBER_STATUS_LABELS[member.status]}
+                </span>
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-x-8 gap-y-4">
@@ -348,7 +400,7 @@ export default function MemberDetailPage() {
               )}
             </div>
 
-            {/* Action buttons */}
+            {/* Approve/Reject actions */}
             {canAct && (
               <div className="mt-6 pt-5 border-t border-[#f3f4f6] flex items-center gap-3">
                 <button
@@ -369,6 +421,143 @@ export default function MemberDetailPage() {
             )}
           </div>
 
+          {/* Super-admin edit form */}
+          {isSuperAdmin && (
+            <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
+              <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  <span className="text-[14px] font-semibold text-[#101828]">แก้ไขข้อมูลสมาชิก</span>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#f0f2ff] text-[#171b82]">Super Admin</span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (editMode) {
+                      setEditMemberType(member.memberType);
+                      setEditStatus(member.status);
+                      setEditExpiryDate(member.expiryDate ?? "");
+                      setEditDiscount(member.discountPercent ?? 0);
+                    }
+                    setEditMode(m => !m);
+                  }}
+                  className="text-[12px] font-semibold text-[#171b82] hover:text-[#0f1260] flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-[#f0f2ff] transition-colors"
+                >
+                  {editMode ? "ยกเลิก" : (
+                    <>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      แก้ไข
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {editMode && (
+                <div className="p-5 flex flex-col gap-4">
+                  {/* Member type */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">ประเภทสมาชิก</label>
+                    <select
+                      value={editMemberType}
+                      onChange={e => {
+                        const t = e.target.value as MemberType;
+                        setEditMemberType(t);
+                        if (!MEMBER_TYPE_HAS_EXPIRY[t]) setEditExpiryDate("");
+                        if (!MEMBER_TYPE_NEEDS_DOC[t]) setEditDiscount(0);
+                      }}
+                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 bg-white"
+                    >
+                      {ALL_MEMBER_TYPES.map(t => (
+                        <option key={t} value={t}>{MEMBER_TYPE_LABELS[t]}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">สถานะ</label>
+                    <select
+                      value={editStatus}
+                      onChange={e => setEditStatus(e.target.value as MemberStatus)}
+                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 bg-white"
+                    >
+                      {ALL_MEMBER_STATUSES.map(s => (
+                        <option key={s} value={s}>{MEMBER_STATUS_LABELS[s]}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Expiry date */}
+                  {MEMBER_TYPE_HAS_EXPIRY[editMemberType] && (
+                    <div>
+                      <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">วันหมดอายุ</label>
+                      <input
+                        type="date"
+                        value={editExpiryDate}
+                        onChange={e => setEditExpiryDate(e.target.value)}
+                        className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10"
+                      />
+                    </div>
+                  )}
+
+                  {/* Discount */}
+                  {MEMBER_TYPE_NEEDS_DOC[editMemberType] && (
+                    <div>
+                      <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">ส่วนลด (%)</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          value={editDiscount}
+                          onChange={e => setEditDiscount(Number(e.target.value))}
+                          className="flex-1 accent-[#171b82]"
+                        />
+                        <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20">
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={editDiscount}
+                            onChange={e => setEditDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
+                            className="w-full px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
+                          />
+                          <span className="pr-2 text-[13px] text-[#667085]">%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 pt-1">
+                    <button
+                      onClick={() => {
+                        setEditMemberType(member.memberType);
+                        setEditStatus(member.status);
+                        setEditExpiryDate(member.expiryDate ?? "");
+                        setEditDiscount(member.discountPercent ?? 0);
+                        setEditMode(false);
+                      }}
+                      className="flex-1 border border-[#d0d5dd] text-[13px] font-semibold text-[#344054] py-2.5 rounded-xl hover:bg-[#f9fafb] transition-colors"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      onClick={handleEditSave}
+                      className="flex-1 bg-[#171b82] text-white text-[13px] font-semibold py-2.5 rounded-xl hover:bg-[#0f1260] transition-colors"
+                    >
+                      บันทึกการแก้ไข
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Audit log */}
           <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#f3f4f6]">
@@ -384,6 +573,8 @@ export default function MemberDetailPage() {
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                     ) : entry.action === "หมดอายุ" ? (
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    ) : entry.action === "แก้ไขข้อมูล" ? (
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6d28d9" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     ) : (
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#171b82" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     )}
@@ -430,7 +621,6 @@ export default function MemberDetailPage() {
             </div>
 
             <div className="flex flex-col gap-4">
-              {/* Expiry date — only for types that have expiry */}
               {hasExpiry && (
                 <div>
                   <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">วันหมดอายุ</label>
@@ -444,7 +634,6 @@ export default function MemberDetailPage() {
                 </div>
               )}
 
-              {/* No-expiry note for senior */}
               {!hasExpiry && hasDoc && (
                 <div className="flex items-center gap-2 bg-[#f0fdf4] border border-[#86efac] rounded-lg px-3 py-2.5">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -452,12 +641,9 @@ export default function MemberDetailPage() {
                 </div>
               )}
 
-              {/* Discount — for all types that require a document */}
               {hasDoc && (
                 <div>
-                  <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">
-                    ส่วนลด (%)
-                  </label>
+                  <label className="block text-[12px] font-semibold text-[#344054] mb-1.5">ส่วนลด (%)</label>
                   <div className="flex items-center gap-3">
                     <input
                       type="range"
