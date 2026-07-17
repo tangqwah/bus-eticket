@@ -109,7 +109,7 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[28px] font-bold text-[#101828]">{s.value}</span>
+              <span className="text-[28px] font-semibold text-[#101828]">{s.value}</span>
               <span className="text-[14px] text-[#667085] font-medium">{s.unit}</span>
             </div>
             <div className="text-[13px] text-[#667085] mt-0.5">{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
@@ -122,7 +122,7 @@ export default function DashboardPage() {
         {/* Recent bookings */}
         <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#f3f4f6]">
-            <span className="text-[15px] font-bold text-[#101828]">การจองล่าสุด</span>
+            <span className="text-[15px] font-semibold text-[#101828]">การจองล่าสุด</span>
             <a href="/backoffice/bookings" className="text-[13px] font-semibold text-[#171b82] hover:text-[#0f1260]">ดูทั้งหมด →</a>
           </div>
           <table className="w-full text-[13px]">
@@ -156,7 +156,7 @@ export default function DashboardPage() {
         {/* Today's trips */}
         <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#f3f4f6]">
-            <span className="text-[15px] font-bold text-[#101828]">เที่ยวรถวันนี้</span>
+            <span className="text-[15px] font-semibold text-[#101828]">เที่ยวรถวันนี้</span>
             <span className="text-[11px] font-semibold bg-[#f0f2ff] text-[#171b82] px-2 py-0.5 rounded-full">{TODAY_TRIPS.length} เที่ยว</span>
           </div>
           <div className="divide-y divide-[#f9fafb]">
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                 <div key={i} className="px-5 py-3.5">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
-                      <div className="text-[13px] font-bold text-[#101828]">{t.time} · {t.route}</div>
+                      <div className="text-[13px] font-semibold text-[#101828]">{t.time} · {t.route}</div>
                       <div className="text-[11px] text-[#9ca3af] mt-0.5">{t.type}</div>
                     </div>
                     <span className={`text-[11px] font-semibold shrink-0 ${ts.cls}`}>{ts.label}</span>

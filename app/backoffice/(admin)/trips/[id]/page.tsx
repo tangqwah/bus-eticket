@@ -45,7 +45,7 @@ function SeatGrid({ sold, total }: { sold: number; total: number }) {
               <div
                 key={c}
                 title={`ที่นั่ง ${idx + 1}`}
-                className={`w-6 h-5 rounded-sm border text-[9px] font-bold flex items-center justify-center ${
+                className={`w-6 h-5 rounded-sm border text-[9px] font-semibold flex items-center justify-center ${
                   occupied
                     ? "bg-[#171b82] border-[#171b82] text-white"
                     : "bg-[#f9fafb] border-[#e5e7eb] text-[#9ca3af]"
@@ -131,7 +131,7 @@ export default function TripDetailPage() {
             <p className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">เส้นทาง</p>
             <div className="flex items-center gap-3">
               <div>
-                <p className="text-[18px] font-bold text-[#101828] leading-tight">{trip.from}</p>
+                <p className="text-[18px] font-semibold text-[#101828] leading-tight">{trip.from}</p>
                 <p className="text-[11px] text-[#9ca3af]">ต้นทาง</p>
               </div>
               <div className="flex flex-col items-center gap-0.5 flex-1 max-w-[80px]">
@@ -142,7 +142,7 @@ export default function TripDetailPage() {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-[18px] font-bold text-[#101828] leading-tight">{trip.to}</p>
+                <p className="text-[18px] font-semibold text-[#101828] leading-tight">{trip.to}</p>
                 <p className="text-[11px] text-[#9ca3af]">ปลายทาง</p>
               </div>
             </div>
@@ -259,15 +259,15 @@ export default function TripDetailPage() {
           {/* Stats */}
           <div className="grid grid-cols-3 gap-2 text-center">
             <div className="bg-[#f0f2ff] rounded-xl py-3">
-              <p className="text-[20px] font-bold text-[#171b82]">{trip.sold}</p>
+              <p className="text-[20px] font-semibold text-[#171b82]">{trip.sold}</p>
               <p className="text-[10px] text-[#667085] font-semibold mt-0.5">จองแล้ว</p>
             </div>
             <div className="bg-[#f0fdf4] rounded-xl py-3">
-              <p className="text-[20px] font-bold text-[#059669]">{trip.total - trip.sold}</p>
+              <p className="text-[20px] font-semibold text-[#059669]">{trip.total - trip.sold}</p>
               <p className="text-[10px] text-[#667085] font-semibold mt-0.5">ว่าง</p>
             </div>
             <div className="bg-[#f9fafb] rounded-xl py-3">
-              <p className="text-[20px] font-bold text-[#344054]">{trip.total}</p>
+              <p className="text-[20px] font-semibold text-[#344054]">{trip.total}</p>
               <p className="text-[10px] text-[#667085] font-semibold mt-0.5">ทั้งหมด</p>
             </div>
           </div>

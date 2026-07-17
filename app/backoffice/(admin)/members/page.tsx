@@ -101,7 +101,7 @@ export default function MembersPage() {
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           <div>
-            <div className="text-[13px] font-bold text-[#b45309]">มีสมาชิกที่ใกล้หมดอายุ</div>
+            <div className="text-[13px] font-semibold text-[#b45309]">มีสมาชิกที่ใกล้หมดอายุ</div>
             <div className="text-[12px] text-[#92400e] mt-0.5">
               {expiringSoon.length} รายการ ภายใน {reminderDays} วัน:{" "}
               {expiringSoon.map((m, i) => (
@@ -144,7 +144,7 @@ export default function MembersPage() {
             </div>
             <div>
               <div className="text-[12px] text-[#667085] font-medium">{s.label}</div>
-              <div className={`text-[24px] font-bold mt-0.5 ${s.color}`}>
+              <div className={`text-[24px] font-semibold mt-0.5 ${s.color}`}>
                 {s.value} <span className="text-[14px] font-medium text-[#667085]">{s.unit}</span>
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function MembersPage() {
                   }`}
                 >
                   {tab.label}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${typeFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${typeFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                     {count}
                   </span>
                 </button>
@@ -221,7 +221,7 @@ export default function MembersPage() {
                   }`}
                 >
                   {tab.label}
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                     {count}
                   </span>
                 </button>
@@ -274,7 +274,7 @@ export default function MembersPage() {
                       <div className={soon ? "text-[#b45309] font-semibold" : "text-[#667085]"}>
                         {isoToThai(m.expiryDate)}
                         {soon && (
-                          <div className="text-[10px] font-bold text-[#b45309] mt-0.5 flex items-center gap-1">
+                          <div className="text-[10px] font-semibold text-[#b45309] mt-0.5 flex items-center gap-1">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="#b45309"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                             เหลือ {daysUntilExpiry(m.expiryDate)} วัน
                           </div>
@@ -286,7 +286,7 @@ export default function MembersPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     {m.discountPercent != null ? (
-                      <span className="font-bold text-[#059669]">{m.discountPercent}%</span>
+                      <span className="font-semibold text-[#059669]">{m.discountPercent}%</span>
                     ) : (
                       <span className="text-[#9ca3af]">—</span>
                     )}

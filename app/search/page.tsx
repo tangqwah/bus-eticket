@@ -59,7 +59,7 @@ export default function SearchPage() {
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-[15px] font-semibold text-[#101828] truncate">{bus.route}</span>
                 <span
-                  className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white shrink-0"
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full text-white shrink-0"
                   style={{ backgroundColor: bus.typeColor }}
                 >
                   {bus.type}
@@ -74,7 +74,7 @@ export default function SearchPage() {
             {/* Times */}
             <div className="flex items-center gap-4 shrink-0">
               <div className="text-center">
-                <div className="text-[20px] font-bold text-[#101828]">{bus.dep}</div>
+                <div className="text-[20px] font-semibold text-[#101828]">{bus.dep}</div>
                 <div className="text-[11px] text-[#667085]">ออกเดินทาง</div>
               </div>
               <div className="flex flex-col items-center gap-1">
@@ -83,7 +83,7 @@ export default function SearchPage() {
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-[20px] font-bold text-[#101828]">{bus.arr}</div>
+                <div className="text-[20px] font-semibold text-[#101828]">{bus.arr}</div>
                 <div className="text-[11px] text-[#667085]">ถึงปลายทาง</div>
               </div>
             </div>
@@ -94,7 +94,7 @@ export default function SearchPage() {
                 เหลือ {bus.seats} ที่นั่ง
               </span>
               <div className="text-right">
-                <div className="text-[22px] font-bold text-[#a43458]">{bus.price.toLocaleString()}</div>
+                <div className="text-[22px] font-semibold text-[#a43458]">{bus.price.toLocaleString()}</div>
                 <div className="text-[11px] text-[#667085]">บาท/ที่นั่ง</div>
               </div>
               <button

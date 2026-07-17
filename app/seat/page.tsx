@@ -71,7 +71,7 @@ export default function SeatPage() {
       content = <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>;
     } else if (isOwnedByActive || isOwnedByOther) {
       cls = `bg-[#cd416e] border-[#cd416e] text-white${isOwnedByOther ? " cursor-default" : ""}`;
-      content = <span className="text-[13px] font-bold">{owner + 1}</span>;
+      content = <span className="text-[13px] font-semibold">{owner + 1}</span>;
     } else {
       cls = "bg-white border-[#079455] text-[#079455] hover:bg-[#f0fdf4]";
     }
@@ -97,7 +97,7 @@ export default function SeatPage() {
         <div className="max-w-[1100px] mx-auto px-4 py-2.5 flex items-center gap-2 text-[14px] font-medium text-[#92400e]">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
           กรุณาเลือกที่นั่งภายใน{" "}
-          <span className="font-bold text-[#b45309]">{mm}:{ss}</span>
+          <span className="font-semibold text-[#b45309]">{mm}:{ss}</span>
           {" "}นาที มิฉะนั้นการจองจะถูกยกเลิก
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function SeatPage() {
                     }`}
                   >
                     {/* Number badge */}
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 ${
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 ${
                       isActive ? "bg-[#cd416e] text-white" : hasSeat ? "bg-[#171b82] text-white" : "bg-[#f3f4f6] text-[#9ca3af]"
                     }`}>
                       {i + 1}
@@ -201,7 +201,7 @@ export default function SeatPage() {
                     </div>
 
                     {/* Seat badge */}
-                    <div className={`text-[14px] font-bold px-2.5 py-1 rounded-lg shrink-0 ${
+                    <div className={`text-[14px] font-semibold px-2.5 py-1 rounded-lg shrink-0 ${
                       hasSeat
                         ? "bg-[#cd416e] text-white"
                         : "bg-[#f3f4f6] text-[#9ca3af] text-[12px]"
@@ -233,7 +233,7 @@ export default function SeatPage() {
               <span>เที่ยวไป x {PASSENGERS.length}</span>
               <span className="text-[#344054]">{(427 * PASSENGERS.length).toLocaleString()} บาท</span>
             </div>
-            <div className="border-t border-[#f3f4f6] pt-2 flex justify-between font-bold text-[#101828] text-[15px]">
+            <div className="border-t border-[#f3f4f6] pt-2 flex justify-between font-semibold text-[#101828] text-[15px]">
               <span>รวมทั้งหมด</span>
               <span className="text-[#a43458]">{(427 * PASSENGERS.length).toLocaleString()} บาท</span>
             </div>
@@ -253,7 +253,7 @@ export default function SeatPage() {
           </button>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-[20px] font-bold text-[#a43458]">{(427 * PASSENGERS.length).toLocaleString()} บาท</div>
+              <div className="text-[20px] font-semibold text-[#a43458]">{(427 * PASSENGERS.length).toLocaleString()} บาท</div>
               <div className="text-[12px] text-[#667085]">ราคารวม</div>
             </div>
             <button

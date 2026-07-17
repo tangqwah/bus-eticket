@@ -28,7 +28,7 @@ export default function ReviewPage() {
             <div className="p-5">
               <div className="flex items-center gap-6 mb-4">
                 <div className="text-center">
-                  <div className="text-[28px] font-bold text-[#101828]">09:00</div>
+                  <div className="text-[28px] font-semibold text-[#101828]">09:00</div>
                   <div className="text-[13px] text-[#667085]">กรุงเทพมหานคร</div>
                   <div className="text-[12px] text-[#9ca3af]">สถานีขนส่งสายใต้ใหม่</div>
                 </div>
@@ -40,7 +40,7 @@ export default function ReviewPage() {
                   <span className="text-[12px] text-[#667085] bg-[#f3f4f6] px-2 py-0.5 rounded-full">รถด่วน</span>
                 </div>
                 <div className="text-center">
-                  <div className="text-[28px] font-bold text-[#101828]">15:30</div>
+                  <div className="text-[28px] font-semibold text-[#101828]">15:30</div>
                   <div className="text-[13px] text-[#667085]">ขอนแก่น</div>
                   <div className="text-[12px] text-[#9ca3af]">สถานีขนส่งขอนแก่น</div>
                 </div>
@@ -70,7 +70,7 @@ export default function ReviewPage() {
               {PASSENGERS.map((p, i) => (
                 <div key={i} className="p-5 flex items-start gap-4">
                   <div className="w-9 h-9 rounded-full bg-[#fff0f4] flex items-center justify-center shrink-0">
-                    <span className="text-[14px] font-bold text-[#cd416e]">{i + 1}</span>
+                    <span className="text-[14px] font-semibold text-[#cd416e]">{i + 1}</span>
                   </div>
                   <div className="flex-1 grid grid-cols-2 gap-x-6 gap-y-1.5 text-[13px]">
                     <div>
@@ -79,7 +79,7 @@ export default function ReviewPage() {
                     </div>
                     <div>
                       <span className="text-[#667085]">ที่นั่ง: </span>
-                      <span className="font-bold text-[#cd416e]">{p.seat}</span>
+                      <span className="font-semibold text-[#cd416e]">{p.seat}</span>
                     </div>
                     <div>
                       <span className="text-[#667085]">เลขบัตร: </span>
@@ -104,7 +104,7 @@ export default function ReviewPage() {
             <div className="p-5 flex gap-3">
               {PASSENGERS.map((p, i) => (
                 <div key={i} className="flex-1 bg-[#fff0f4] rounded-lg p-3 text-center">
-                  <div className="text-[22px] font-bold text-[#cd416e]">{p.seat}</div>
+                  <div className="text-[22px] font-semibold text-[#cd416e]">{p.seat}</div>
                   <div className="text-[12px] text-[#667085] mt-0.5">ผู้โดยสารที่ {i + 1}</div>
                 </div>
               ))}
@@ -125,7 +125,7 @@ export default function ReviewPage() {
                 <span>ค่าบริการ</span>
                 <span className="text-[#344054]">0 บาท</span>
               </div>
-              <div className="border-t border-[#f3f4f6] pt-3 mt-1 flex justify-between font-bold text-[#101828] text-[16px]">
+              <div className="border-t border-[#f3f4f6] pt-3 mt-1 flex justify-between font-semibold text-[#101828] text-[16px]">
                 <span>รวมทั้งหมด</span>
                 <span className="text-[#a43458]">{total.toLocaleString()} บาท</span>
               </div>
@@ -151,7 +151,7 @@ export default function ReviewPage() {
           </button>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-[20px] font-bold text-[#a43458]">{total.toLocaleString()} บาท</div>
+              <div className="text-[20px] font-semibold text-[#a43458]">{total.toLocaleString()} บาท</div>
               <div className="text-[12px] text-[#667085]">ราคารวม</div>
             </div>
             <button

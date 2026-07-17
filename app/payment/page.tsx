@@ -141,7 +141,7 @@ export default function PaymentPage() {
               </div>
               <p className="text-[14px] text-[#667085] text-center">
                 สแกน QR Code เพื่อชำระเงิน<br />
-                <span className="font-bold text-[#101828]">{total.toLocaleString()} บาท</span>
+                <span className="font-semibold text-[#101828]">{total.toLocaleString()} บาท</span>
               </p>
               <p className="text-[12.5px] text-[#9ca3af]">QR Code หมดอายุใน 15:00 นาที</p>
             </div>
@@ -191,7 +191,7 @@ export default function PaymentPage() {
                 <span>ค่าบริการ</span>
                 <span className="text-[#344054]">0 บาท</span>
               </div>
-              <div className="border-t border-[#f3f4f6] pt-3 mt-1 flex justify-between font-bold text-[#101828] text-[16px]">
+              <div className="border-t border-[#f3f4f6] pt-3 mt-1 flex justify-between font-semibold text-[#101828] text-[16px]">
                 <span>ยอดชำระ</span>
                 <span className="text-[#a43458]">{total.toLocaleString()} บาท</span>
               </div>
@@ -212,13 +212,13 @@ export default function PaymentPage() {
           </button>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-[20px] font-bold text-[#a43458]">{total.toLocaleString()} บาท</div>
+              <div className="text-[20px] font-semibold text-[#a43458]">{total.toLocaleString()} บาท</div>
               <div className="text-[12px] text-[#667085]">ยอดชำระทั้งหมด</div>
             </div>
             <button
               onClick={handlePay}
               disabled={loading}
-              className="bg-[#cd416e] text-white text-[15px] font-bold px-8 py-3 rounded-lg flex items-center gap-2 hover:bg-[#b83560] disabled:opacity-75 min-w-[180px] justify-center"
+              className="bg-[#cd416e] text-white text-[15px] font-semibold px-8 py-3 rounded-lg flex items-center gap-2 hover:bg-[#b83560] disabled:opacity-75 min-w-[180px] justify-center"
             >
               {loading ? (
                 <>

@@ -219,7 +219,7 @@ export default function PassengerPage() {
             <div className="p-4 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div className="text-center">
-                  <div className="text-[22px] font-bold text-[#101828]">09:00</div>
+                  <div className="text-[22px] font-semibold text-[#101828]">09:00</div>
                   <div className="text-[11px] text-[#667085]">กรุงเทพฯ</div>
                 </div>
                 <div className="flex-1 flex flex-col items-center gap-0.5 px-2">
@@ -229,7 +229,7 @@ export default function PassengerPage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-[22px] font-bold text-[#101828]">15:30</div>
+                  <div className="text-[22px] font-semibold text-[#101828]">15:30</div>
                   <div className="text-[11px] text-[#667085]">ขอนแก่น</div>
                 </div>
               </div>
@@ -258,7 +258,7 @@ export default function PassengerPage() {
                 <span>เที่ยวไป x {passengers.length}</span>
                 <span className="text-[#344054]">{(PRICE_PER * passengers.length).toLocaleString()} บาท</span>
               </div>
-              <div className="border-t border-[#f3f4f6] pt-2 mt-1 flex justify-between font-bold text-[#101828] text-[15px]">
+              <div className="border-t border-[#f3f4f6] pt-2 mt-1 flex justify-between font-semibold text-[#101828] text-[15px]">
                 <span>รวมทั้งหมด</span>
                 <span className="text-[#a43458]">{total.toLocaleString()} บาท</span>
               </div>
@@ -279,7 +279,7 @@ export default function PassengerPage() {
           </button>
           <div className="flex items-center gap-6">
             <div className="text-right">
-              <div className="text-[20px] font-bold text-[#a43458]">{total.toLocaleString()} บาท</div>
+              <div className="text-[20px] font-semibold text-[#a43458]">{total.toLocaleString()} บาท</div>
               <div className="text-[12px] text-[#667085]">ราคารวม ({passengers.length} ผู้โดยสาร)</div>
             </div>
             <button

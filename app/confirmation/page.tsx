@@ -44,12 +44,12 @@ export default function ConfirmationPage() {
               <polyline points="22 4 12 14.01 9 11.01"/>
             </svg>
           </div>
-          <h1 className="text-[28px] font-bold text-[#101828]">ชำระเงินสำเร็จ!</h1>
+          <h1 className="text-[28px] font-semibold text-[#101828]">ชำระเงินสำเร็จ!</h1>
           <p className="text-[15px] text-[#667085]">
             ตั๋วโดยสารอิเล็กทรอนิกส์ได้ถูกส่งไปยังอีเมลของท่านแล้ว
           </p>
           <div className="bg-[#f0fdf4] border border-[#bbf7d0] rounded-lg px-5 py-2.5 text-[14px] text-[#065f46] font-medium">
-            หมายเลขการจอง: <span className="font-bold text-[#047857]">{BOOKING_NO}</span>
+            หมายเลขการจอง: <span className="font-semibold text-[#047857]">{BOOKING_NO}</span>
           </div>
         </div>
 
@@ -71,7 +71,7 @@ export default function ConfirmationPage() {
                 </div>
                 <div className="text-right">
                   <div className="text-white/70 text-[11px]">เลขที่การจอง</div>
-                  <div className="text-white text-[16px] font-bold tracking-wider">{BOOKING_NO}</div>
+                  <div className="text-white text-[16px] font-semibold tracking-wider">{BOOKING_NO}</div>
                 </div>
               </div>
 
@@ -80,7 +80,7 @@ export default function ConfirmationPage() {
                 {/* Route */}
                 <div className="flex items-center gap-4 mb-5">
                   <div className="text-center">
-                    <div className="text-[26px] font-bold text-[#101828]">09:00</div>
+                    <div className="text-[26px] font-semibold text-[#101828]">09:00</div>
                     <div className="text-[13px] font-semibold text-[#344054]">กรุงเทพมหานคร</div>
                     <div className="text-[11px] text-[#9ca3af] mt-0.5">สถานีขนส่งสายใต้ใหม่</div>
                   </div>
@@ -93,7 +93,7 @@ export default function ConfirmationPage() {
                     <span className="text-[11px] bg-[#f3f4f6] text-[#667085] px-2 py-0.5 rounded-full font-medium">รถด่วน</span>
                   </div>
                   <div className="text-center">
-                    <div className="text-[26px] font-bold text-[#101828]">15:30</div>
+                    <div className="text-[26px] font-semibold text-[#101828]">15:30</div>
                     <div className="text-[13px] font-semibold text-[#344054]">ขอนแก่น</div>
                     <div className="text-[11px] text-[#9ca3af] mt-0.5">สถานีขนส่งขอนแก่น</div>
                   </div>
@@ -126,7 +126,7 @@ export default function ConfirmationPage() {
                 {/* Barcode section */}
                 <div className="flex flex-col items-center gap-3">
                   <Barcode />
-                  <div className="text-[16px] font-bold text-[#101828] tracking-[0.2em]">{BOOKING_NO}</div>
+                  <div className="text-[16px] font-semibold text-[#101828] tracking-[0.2em]">{BOOKING_NO}</div>
                   <div className="text-[12px] text-[#667085] text-center">
                     แสดงรหัสนี้ที่ช่องตรวจตั๋วก่อนขึ้นรถ
                   </div>

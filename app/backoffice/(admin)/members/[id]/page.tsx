@@ -85,7 +85,7 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
             <line x1="8" y1="2" x2="8" y2="6"/>
             <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
-          <span className="text-white text-[11px] font-bold tracking-wide">{style.orgName}</span>
+          <span className="text-white text-[11px] font-semibold tracking-wide">{style.orgName}</span>
         </div>
         <span className="text-white/60 text-[9px] font-medium">บขส.</span>
       </div>
@@ -98,8 +98,8 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
             </svg>
           </div>
           <div className="flex-1">
-            <div className="text-[9px] font-bold text-[#9ca3af] uppercase tracking-wider mb-1">{style.cardType}</div>
-            <div className="text-[13px] font-bold text-[#101828] leading-tight">สมาชิก บขส.</div>
+            <div className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">{style.cardType}</div>
+            <div className="text-[13px] font-semibold text-[#101828] leading-tight">สมาชิก บขส.</div>
             <div className="text-[10px] text-[#667085] mt-0.5 font-mono">ID: BKS-XXXX-XXXX</div>
             <div className="mt-2 flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5">
@@ -115,7 +115,7 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
         </div>
         <div className="mt-3 pt-3 border-t border-[#e5e7eb] flex items-center justify-between">
           <span className="text-[9px] font-semibold text-[#9ca3af] uppercase tracking-wider">ตัวอย่างเอกสารที่อัปโหลด</span>
-          <div className="flex items-center gap-1 text-[9px] font-bold" style={{ color: style.headerBg }}>
+          <div className="flex items-center gap-1 text-[9px] font-semibold" style={{ color: style.headerBg }}>
             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             ยืนยันการอัปโหลด
           </div>
@@ -296,14 +296,14 @@ export default function MemberDetailPage() {
             <div className="flex items-start justify-between mb-5">
               <div>
                 <div className="flex items-center gap-2.5 mb-1">
-                  <h2 className="text-[18px] font-bold text-[#101828]">{member.name}</h2>
+                  <h2 className="text-[18px] font-semibold text-[#101828]">{member.name}</h2>
                   <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[member.memberType]}`}>
                     {MEMBER_TYPE_LABELS[member.memberType]}
                   </span>
                 </div>
                 <div className="text-[12px] font-mono text-[#9ca3af]">{member.id}</div>
               </div>
-              <span className={`text-[12px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[member.status]}`}>
+              <span className={`text-[12px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[member.status]}`}>
                 {MEMBER_STATUS_LABELS[member.status]}
               </span>
             </div>
@@ -328,14 +328,14 @@ export default function MemberDetailPage() {
                   </div>
                   <div>
                     <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">วันหมดอายุ</div>
-                    <div className={`text-[13px] font-medium ${expiringSoon ? "text-[#b45309] font-bold" : "text-[#344054]"}`}>
+                    <div className={`text-[13px] font-medium ${expiringSoon ? "text-[#b45309] font-semibold" : "text-[#344054]"}`}>
                       {member.expiryDate ? isoToThai(member.expiryDate) : "ไม่มีวันหมดอายุ"}
                     </div>
                   </div>
                   {member.discountPercent != null && (
                     <div>
                       <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">ส่วนลด</div>
-                      <div className="text-[20px] font-bold text-[#059669]">{member.discountPercent}%</div>
+                      <div className="text-[20px] font-semibold text-[#059669]">{member.discountPercent}%</div>
                     </div>
                   )}
                 </>
@@ -353,14 +353,14 @@ export default function MemberDetailPage() {
               <div className="mt-6 pt-5 border-t border-[#f3f4f6] flex items-center gap-3">
                 <button
                   onClick={() => { setApproveDiscount(defaultDiscount); setApproveExpiryDate(oneYearFromNow()); setShowApproveModal(true); }}
-                  className="flex items-center gap-2 bg-[#059669] text-white text-[13px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#047857] transition-colors"
+                  className="flex items-center gap-2 bg-[#059669] text-white text-[13px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#047857] transition-colors"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                   อนุมัติ
                 </button>
                 <button
                   onClick={() => { setRejectReason(""); setShowRejectModal(true); }}
-                  className="flex items-center gap-2 bg-white text-[#dc2626] border-2 border-[#fecaca] text-[13px] font-bold px-5 py-2.5 rounded-xl hover:bg-[#fff1f0] transition-colors"
+                  className="flex items-center gap-2 bg-white text-[#dc2626] border-2 border-[#fecaca] text-[13px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#fff1f0] transition-colors"
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                   ไม่อนุมัติ
@@ -372,7 +372,7 @@ export default function MemberDetailPage() {
           {/* Audit log */}
           <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#f3f4f6]">
-              <span className="text-[14px] font-bold text-[#101828]">ประวัติการดำเนินการ</span>
+              <span className="text-[14px] font-semibold text-[#101828]">ประวัติการดำเนินการ</span>
             </div>
             <div className="divide-y divide-[#f9fafb]">
               {[...auditLog].reverse().map(entry => (
@@ -406,7 +406,7 @@ export default function MemberDetailPage() {
         {hasDoc && (
           <div className="flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-              <div className="text-[13px] font-bold text-[#101828] mb-3">{member.documentLabel}</div>
+              <div className="text-[13px] font-semibold text-[#101828] mb-3">{member.documentLabel}</div>
               <DocPlaceholder memberType={member.memberType} />
               <p className="text-[11px] text-[#9ca3af] text-center mt-3">ตัวอย่างเอกสารที่สมาชิกอัปโหลด</p>
             </div>
@@ -424,7 +424,7 @@ export default function MemberDetailPage() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
               </div>
               <div>
-                <div className="text-[15px] font-bold text-[#101828]">อนุมัติสมาชิก</div>
+                <div className="text-[15px] font-semibold text-[#101828]">อนุมัติสมาชิก</div>
                 <div className="text-[12px] text-[#667085]">{member.name}</div>
               </div>
             </div>
@@ -492,7 +492,7 @@ export default function MemberDetailPage() {
               </button>
               <button
                 onClick={handleApprove}
-                className="flex-1 bg-[#059669] text-white text-[13px] font-bold py-2.5 rounded-xl hover:bg-[#047857] transition-colors"
+                className="flex-1 bg-[#059669] text-white text-[13px] font-semibold py-2.5 rounded-xl hover:bg-[#047857] transition-colors"
               >
                 ยืนยันการอนุมัติ
               </button>
@@ -511,7 +511,7 @@ export default function MemberDetailPage() {
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
               </div>
               <div>
-                <div className="text-[15px] font-bold text-[#101828]">ไม่อนุมัติสมาชิก</div>
+                <div className="text-[15px] font-semibold text-[#101828]">ไม่อนุมัติสมาชิก</div>
                 <div className="text-[12px] text-[#667085]">{member.name}</div>
               </div>
             </div>
@@ -542,7 +542,7 @@ export default function MemberDetailPage() {
               <button
                 onClick={handleReject}
                 disabled={!rejectReason.trim()}
-                className="flex-1 bg-[#dc2626] text-white text-[13px] font-bold py-2.5 rounded-xl hover:bg-[#b91c1c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 bg-[#dc2626] text-white text-[13px] font-semibold py-2.5 rounded-xl hover:bg-[#b91c1c] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 ยืนยันการปฏิเสธ
               </button>

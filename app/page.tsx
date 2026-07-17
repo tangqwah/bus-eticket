@@ -217,7 +217,7 @@ function StationSelect({
             ) : (
               grouped.map(group => (
                 <div key={group.region}>
-                  <div className="px-3 py-1.5 text-[11px] font-bold text-[#9ca3af] uppercase tracking-wider bg-[#f9fafb] sticky top-0">
+                  <div className="px-3 py-1.5 text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider bg-[#f9fafb] sticky top-0">
                     {group.region}
                   </div>
                   {group.stations.map(station => (
@@ -275,7 +275,7 @@ export default function Home() {
         <div className="relative z-10 flex flex-col items-center gap-6 px-4 w-full max-w-[900px] mx-auto py-12">
           <div className="flex flex-col items-center gap-2 text-center">
             <img src={BKS_LOGO} alt="BKS" className="h-14 w-auto brightness-0 invert" />
-            <h1 className="text-white text-[30px] font-bold leading-tight">
+            <h1 className="text-white text-[30px] font-semibold leading-tight">
               จองตั๋วรถโดยสารออนไลน์
             </h1>
             <p className="text-white/75 text-[15px] font-light">บริษัท ขนส่ง จำกัด (บขส)</p>

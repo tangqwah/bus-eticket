@@ -96,7 +96,7 @@ export default function RoutesPage() {
               </tr>
             ) : filtered.map(r => (
               <tr key={r.code} className="hover:bg-[#f9fafb] transition-colors">
-                <td className="px-5 py-4 font-mono text-[12px] font-bold text-[#171b82]">{r.code}</td>
+                <td className="px-5 py-4 font-mono text-[12px] font-semibold text-[#171b82]">{r.code}</td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
                     <div className="text-right">
@@ -123,7 +123,7 @@ export default function RoutesPage() {
                     ))}
                   </div>
                 </td>
-                <td className="px-5 py-4 font-bold text-[#101828] whitespace-nowrap">
+                <td className="px-5 py-4 font-semibold text-[#101828] whitespace-nowrap">
                   {r.active ? `${r.baseFare.toLocaleString()} ฿` : <span className="text-[#9ca3af]">—</span>}
                 </td>
                 <td className="px-5 py-4">

@@ -134,7 +134,7 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
       <div className="relative bg-[#f3f4f6] rounded-2xl shadow-2xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
         {/* Modal header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb] bg-white rounded-t-2xl sticky top-0 z-10">
-          <span className="text-[15px] font-bold text-[#101828]">รายละเอียดตั๋ว</span>
+          <span className="text-[15px] font-semibold text-[#101828]">รายละเอียดตั๋ว</span>
           <div className="flex items-center gap-3">
             <button
               onClick={() => window.print()}
@@ -164,7 +164,7 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
                 </div>
                 <div className="text-right">
                   <div className="text-white/60 text-[10px]">เลขที่การจอง</div>
-                  <div className="text-white text-[13px] font-bold tracking-wider">{booking.id}</div>
+                  <div className="text-white text-[13px] font-semibold tracking-wider">{booking.id}</div>
                 </div>
               </div>
 
@@ -172,7 +172,7 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
               <div className="px-5 pt-4 pb-3">
                 <div className="flex items-center gap-3">
                   <div className="text-center min-w-[70px]">
-                    <div className="text-[24px] font-bold text-[#101828]">{booking.depart}</div>
+                    <div className="text-[24px] font-semibold text-[#101828]">{booking.depart}</div>
                     <div className="text-[12px] font-semibold text-[#344054]">{booking.from.split("(")[0].trim()}</div>
                     <div className="text-[10px] text-[#9ca3af] mt-0.5">{"fromSub" in booking ? booking.fromSub : ""}</div>
                   </div>
@@ -185,7 +185,7 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
                     <span className="text-[10px] bg-[#f3f4f6] text-[#667085] px-2 py-0.5 rounded-full font-medium">{booking.type}</span>
                   </div>
                   <div className="text-center min-w-[70px]">
-                    <div className="text-[24px] font-bold text-[#101828]">{booking.arrive}</div>
+                    <div className="text-[24px] font-semibold text-[#101828]">{booking.arrive}</div>
                     <div className="text-[12px] font-semibold text-[#344054]">{booking.to.split("(")[0].trim()}</div>
                     <div className="text-[10px] text-[#9ca3af] mt-0.5">{"toSub" in booking ? booking.toSub : ""}</div>
                   </div>
@@ -219,7 +219,7 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
               {/* Barcode */}
               <div className="flex flex-col items-center gap-2 pb-5">
                 <Barcode />
-                <div className="text-[13px] font-bold text-[#101828] tracking-[0.15em]">{booking.id}-{i + 1}</div>
+                <div className="text-[13px] font-semibold text-[#101828] tracking-[0.15em]">{booking.id}-{i + 1}</div>
                 <div className="text-[11px] text-[#9ca3af]">แสดงรหัสนี้ที่ช่องตรวจตั๋วก่อนขึ้นรถ</div>
               </div>
             </div>
@@ -235,12 +235,12 @@ function BookingCard({ booking, showCancel = false, onViewTicket }: { booking: B
     <div className="bg-white border border-[#e5e7eb] rounded-xl overflow-hidden">
       <div className="bg-[#171b82] px-5 py-3 flex items-center justify-between">
         <span className="text-white/80 text-[12px] font-medium">{booking.type}</span>
-        <span className="text-white text-[13px] font-bold tracking-wider">{booking.id}</span>
+        <span className="text-white text-[13px] font-semibold tracking-wider">{booking.id}</span>
       </div>
       <div className="p-5">
         <div className="flex items-center gap-4 mb-4">
           <div className="text-center">
-            <div className="text-[22px] font-bold text-[#101828]">{booking.depart}</div>
+            <div className="text-[22px] font-semibold text-[#101828]">{booking.depart}</div>
             <div className="text-[13px] font-semibold text-[#344054] mt-0.5">{booking.from}</div>
           </div>
           <div className="flex-1 flex flex-col items-center gap-1">
@@ -250,7 +250,7 @@ function BookingCard({ booking, showCancel = false, onViewTicket }: { booking: B
             </div>
           </div>
           <div className="text-center">
-            <div className="text-[22px] font-bold text-[#101828]">{booking.arrive}</div>
+            <div className="text-[22px] font-semibold text-[#101828]">{booking.arrive}</div>
             <div className="text-[13px] font-semibold text-[#344054] mt-0.5">{booking.to}</div>
           </div>
         </div>
@@ -274,7 +274,7 @@ function BookingCard({ booking, showCancel = false, onViewTicket }: { booking: B
                 ยกเลิก
               </button>
             )}
-            <span className="text-[15px] font-bold text-[#101828]">{booking.total.toLocaleString()} ฿</span>
+            <span className="text-[15px] font-semibold text-[#101828]">{booking.total.toLocaleString()} ฿</span>
           </div>
         </div>
       </div>
@@ -285,7 +285,7 @@ function BookingCard({ booking, showCancel = false, onViewTicket }: { booking: B
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="mb-6">
-      <h2 className="text-[20px] font-bold text-[#101828]">{title}</h2>
+      <h2 className="text-[20px] font-semibold text-[#101828]">{title}</h2>
       {subtitle && <p className="text-[14px] text-[#667085] mt-0.5">{subtitle}</p>}
     </div>
   );
@@ -334,11 +334,11 @@ export default function ProfilePage() {
         <aside className="w-[260px] shrink-0 flex flex-col gap-3">
           {/* User card */}
           <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 flex flex-col items-center gap-3 text-center">
-            <div className="w-16 h-16 rounded-full bg-[#171b82] flex items-center justify-center text-white text-[26px] font-bold">
+            <div className="w-16 h-16 rounded-full bg-[#171b82] flex items-center justify-center text-white text-[26px] font-semibold">
               {user.name.charAt(2)}
             </div>
             <div>
-              <div className="text-[15px] font-bold text-[#101828]">{user.name}</div>
+              <div className="text-[15px] font-semibold text-[#101828]">{user.name}</div>
               <div className="text-[13px] text-[#667085] mt-0.5">@{user.username}</div>
             </div>
             <span className="bg-[#f0f2ff] text-[#171b82] text-[11px] font-semibold px-3 py-1 rounded-full">
@@ -346,12 +346,12 @@ export default function ProfilePage() {
             </span>
             <div className="w-full border-t border-[#f3f4f6] pt-3 flex justify-center gap-6 text-center">
               <div>
-                <div className="text-[16px] font-bold text-[#101828]">1,502</div>
+                <div className="text-[16px] font-semibold text-[#101828]">1,502</div>
                 <div className="text-[11px] text-[#9ca3af]">แต้มสะสม</div>
               </div>
               <div className="w-px bg-[#e5e7eb]" />
               <div>
-                <div className="text-[16px] font-bold text-[#101828]">3</div>
+                <div className="text-[16px] font-semibold text-[#101828]">3</div>
                 <div className="text-[11px] text-[#9ca3af]">การเดินทาง</div>
               </div>
             </div>
@@ -495,7 +495,7 @@ export default function ProfilePage() {
               <div className="flex flex-col gap-3">
                 {MOCK_PASSENGERS.map(p => (
                   <div key={p.id} className="bg-white border border-[#e5e7eb] rounded-xl p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-[#f0f2ff] flex items-center justify-center text-[#171b82] text-[15px] font-bold shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-[#f0f2ff] flex items-center justify-center text-[#171b82] text-[15px] font-semibold shrink-0">
                       {p.name.charAt(3)}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -528,7 +528,7 @@ export default function ProfilePage() {
               <div className="bg-gradient-to-br from-[#171b82] to-[#2d3491] rounded-2xl p-6 mb-6 flex items-center justify-between">
                 <div>
                   <div className="text-white/70 text-[13px] font-medium mb-1">แต้มสะสมคงเหลือ</div>
-                  <div className="text-white text-[40px] font-bold leading-none">1,502</div>
+                  <div className="text-white text-[40px] font-semibold leading-none">1,502</div>
                   <div className="text-white/60 text-[13px] mt-1">แต้ม BKS</div>
                 </div>
                 <div className="flex flex-col items-end gap-3">
@@ -554,7 +554,7 @@ export default function ProfilePage() {
                         <div className="text-[12px] text-[#9ca3af]">{p.date}</div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className={`text-[14px] font-bold ${p.points > 0 ? "text-[#059669]" : "text-[#dc2626]"}`}>
+                        <div className={`text-[14px] font-semibold ${p.points > 0 ? "text-[#059669]" : "text-[#dc2626]"}`}>
                           {p.points > 0 ? "+" : ""}{p.points} แต้ม
                         </div>
                         <div className="text-[12px] text-[#9ca3af]">คงเหลือ {p.balance.toLocaleString()}</div>
@@ -575,7 +575,7 @@ export default function ProfilePage() {
                   <div key={c.code} className={`bg-white border rounded-xl overflow-hidden flex ${c.used ? "opacity-50" : ""}`}>
                     {/* Left color strip + discount */}
                     <div className={`w-[100px] shrink-0 flex flex-col items-center justify-center px-3 py-5 ${c.used ? "bg-[#f3f4f6]" : "bg-[#171b82]"}`}>
-                      <div className={`text-[22px] font-bold ${c.used ? "text-[#9ca3af]" : "text-white"}`}>{c.discount}</div>
+                      <div className={`text-[22px] font-semibold ${c.used ? "text-[#9ca3af]" : "text-white"}`}>{c.discount}</div>
                       <div className={`text-[11px] font-medium mt-0.5 ${c.used ? "text-[#9ca3af]" : "text-white/70"}`}>ส่วนลด</div>
                     </div>
                     {/* Tear line */}

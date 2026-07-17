@@ -73,7 +73,7 @@ export default function BookingsPage() {
           <div key={s.label} className="bg-white rounded-2xl border border-[#e5e7eb] px-5 py-4 flex items-center gap-4">
             <div>
               <div className="text-[12px] text-[#667085] font-medium">{s.label}</div>
-              <div className={`text-[24px] font-bold mt-0.5 ${s.cls}`}>
+              <div className={`text-[24px] font-semibold mt-0.5 ${s.cls}`}>
                 {s.value} <span className="text-[14px] font-medium text-[#667085]">{s.unit}</span>
               </div>
             </div>
@@ -110,7 +110,7 @@ export default function BookingsPage() {
               }`}
             >
               {tab.label}
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                 {tab.count(MOCK_BOOKINGS)}
               </span>
             </button>
@@ -164,7 +164,7 @@ export default function BookingsPage() {
                   </td>
                   <td className="px-4 py-3.5 text-[#667085] whitespace-nowrap">{b.travelDate}</td>
                   <td className="px-4 py-3.5 font-semibold text-[#101828]">{b.seats} ที่นั่ง</td>
-                  <td className="px-4 py-3.5 font-bold text-[#101828] whitespace-nowrap">{b.total.toLocaleString()} ฿</td>
+                  <td className="px-4 py-3.5 font-semibold text-[#101828] whitespace-nowrap">{b.total.toLocaleString()} ฿</td>
                   <td className="px-4 py-3.5 text-[#667085] whitespace-nowrap">{b.paymentMethod}</td>
                   <td className="px-4 py-3.5">
                     <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${st.cls}`}>{st.label}</span>

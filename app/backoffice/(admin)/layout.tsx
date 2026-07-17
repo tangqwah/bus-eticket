@@ -110,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <img src={BKS_LOGO} alt="BKS" className="h-7 w-auto brightness-0 invert shrink-0" />
             <div className="min-w-0">
-              <div className="text-white text-[13px] font-bold leading-tight">ระบบหลังบ้าน</div>
+              <div className="text-white text-[13px] font-semibold leading-tight">ระบบหลังบ้าน</div>
               <div className="text-white/50 text-[10px] font-medium mt-0.5">BKS Backoffice</div>
             </div>
           </div>
@@ -142,7 +142,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* User */}
         <div className="px-3 py-4 border-t border-white/10">
           <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-[13px] font-bold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-[13px] font-semibold shrink-0">
               A
             </div>
             <div className="min-w-0 flex-1">
@@ -169,7 +169,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Topbar */}
         <header className="h-14 bg-white border-b border-[#e5e7eb] flex items-center px-6 gap-4 shrink-0">
           <div className="flex-1">
-            <h1 className="text-[16px] font-bold text-[#101828]">{pageTitle}</h1>
+            <h1 className="text-[16px] font-semibold text-[#101828]">{pageTitle}</h1>
           </div>
           <div className="flex items-center gap-3">
             <Link

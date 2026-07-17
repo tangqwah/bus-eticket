@@ -38,7 +38,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div className="text-[15px] font-bold text-[#101828]">แก้ไขส่วนลด — {title}</div>
+          <div className="text-[15px] font-semibold text-[#101828]">แก้ไขส่วนลด — {title}</div>
           <button
             onClick={onClose}
             className="text-[#9ca3af] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
@@ -52,7 +52,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
           {/* Big value display */}
           <div className="flex items-center justify-center">
             <div className="text-[72px] font-black text-[#101828] leading-none tabular-nums">{draft}</div>
-            <div className="text-[28px] font-bold text-[#667085] self-end mb-3 ml-1">%</div>
+            <div className="text-[28px] font-semibold text-[#667085] self-end mb-3 ml-1">%</div>
           </div>
 
           {/* Slider */}
@@ -77,7 +77,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
               <button
                 key={p}
                 onClick={() => setDraft(p)}
-                className={`flex-1 text-[12px] font-bold py-2 rounded-lg transition-colors ${
+                className={`flex-1 text-[12px] font-semibold py-2 rounded-lg transition-colors ${
                   draft === p
                     ? "bg-[#0f1260] text-white"
                     : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
@@ -115,7 +115,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
           </button>
           <button
             onClick={() => { onSave(draft); onClose(); }}
-            className="flex items-center gap-2 text-[13px] font-bold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
+            className="flex items-center gap-2 text-[13px] font-semibold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             บันทึก
@@ -141,7 +141,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 overflow-hidden">
         <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div className="text-[15px] font-bold text-[#101828]">แก้ไขการแจ้งเตือนก่อนหมดอายุ</div>
+          <div className="text-[15px] font-semibold text-[#101828]">แก้ไขการแจ้งเตือนก่อนหมดอายุ</div>
           <button
             onClick={onClose}
             className="text-[#9ca3af] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
@@ -153,7 +153,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
         <div className="px-6 py-5 flex flex-col gap-5">
           <div className="flex items-center justify-center">
             <div className="text-[72px] font-black text-[#b45309] leading-none tabular-nums">{draft}</div>
-            <div className="text-[18px] font-bold text-[#667085] self-end mb-4 ml-2">วัน</div>
+            <div className="text-[18px] font-semibold text-[#667085] self-end mb-4 ml-2">วัน</div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -176,7 +176,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
               <button
                 key={d}
                 onClick={() => setDraft(d)}
-                className={`text-[12px] font-bold px-4 py-2 rounded-lg transition-colors ${
+                className={`text-[12px] font-semibold px-4 py-2 rounded-lg transition-colors ${
                   draft === d
                     ? "bg-[#b45309] text-white"
                     : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
@@ -212,7 +212,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
           </button>
           <button
             onClick={() => { onSave(draft); onClose(); }}
-            className="flex items-center gap-2 text-[13px] font-bold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
+            className="flex items-center gap-2 text-[13px] font-semibold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             บันทึก
@@ -249,7 +249,7 @@ function SettingCard({
         {config.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-bold text-[#101828]">{config.title}</div>
+        <div className="text-[14px] font-semibold text-[#101828]">{config.title}</div>
         <div className="text-[12px] text-[#667085] mt-0.5">{config.subtitle}</div>
       </div>
       <div className="text-right mr-2 shrink-0">
@@ -381,7 +381,7 @@ export default function DiscountSettingsPage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#171b82" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </div>
         <div>
-          <div className="text-[14px] font-bold text-[#101828]">ตั้งค่าส่วนลดสมาชิก</div>
+          <div className="text-[14px] font-semibold text-[#101828]">ตั้งค่าส่วนลดสมาชิก</div>
           <div className="text-[13px] text-[#667085] mt-1 leading-relaxed">
             กำหนดเปอร์เซ็นต์ส่วนลดค่าโดยสารสำหรับสมาชิกประเภทต่างๆ รวมถึงระยะเวลาแจ้งเตือนก่อนสิทธิ์หมดอายุ
             การเปลี่ยนแปลงจะมีผลกับสมาชิกที่ได้รับการอนุมัติใหม่เท่านั้น

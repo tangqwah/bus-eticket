@@ -34,7 +34,7 @@ export default function BackofficeLoginPage() {
             <img src={BKS_LOGO} alt="BKS" className="h-10 w-auto brightness-0 invert" />
           </div>
           <div>
-            <h1 className="text-[22px] font-bold text-[#101828]">ระบบหลังบ้าน</h1>
+            <h1 className="text-[22px] font-semibold text-[#101828]">ระบบหลังบ้าน</h1>
             <p className="text-[14px] text-[#667085] mt-0.5">บริษัท ขนส่ง จำกัด (บขส) · เฉพาะเจ้าหน้าที่เท่านั้น</p>
           </div>
         </div>

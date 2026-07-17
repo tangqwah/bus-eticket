@@ -419,7 +419,7 @@ export default function RegisterPage() {
                           <MemberTypeIcon type={type} size={18} />
                         </div>
                         <div>
-                          <div className="text-[13px] font-bold text-[#101828] leading-tight">{MEMBER_TYPE_LABELS[type]}</div>
+                          <div className="text-[13px] font-semibold text-[#101828] leading-tight">{MEMBER_TYPE_LABELS[type]}</div>
                           <div className="text-[11px] text-[#667085] mt-0.5 leading-snug">{MEMBER_TYPE_DESCRIPTIONS[type]}</div>
                         </div>
                         <div className="flex items-center gap-1 mt-0.5">
