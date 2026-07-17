@@ -38,7 +38,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div className="text-[15px] font-semibold text-[#101828]">แก้ไขส่วนลด — {title}</div>
+          <div className="text-[17px] font-semibold text-[#101828]">แก้ไขส่วนลด — {title}</div>
           <button
             onClick={onClose}
             className="text-[#9ca3af] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
@@ -51,8 +51,8 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
         <div className="px-6 py-5 flex flex-col gap-5">
           {/* Big value display */}
           <div className="flex items-center justify-center">
-            <div className="text-[72px] font-black text-[#101828] leading-none tabular-nums">{draft}</div>
-            <div className="text-[28px] font-semibold text-[#667085] self-end mb-3 ml-1">%</div>
+            <div className="text-[74px] font-black text-[#101828] leading-none tabular-nums">{draft}</div>
+            <div className="text-[30px] font-semibold text-[#667085] self-end mb-3 ml-1">%</div>
           </div>
 
           {/* Slider */}
@@ -66,7 +66,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
               onChange={e => setDraft(Number(e.target.value))}
               className="w-full accent-[#171b82] h-2"
             />
-            <div className="flex justify-between text-[10px] text-[#9ca3af] font-medium">
+            <div className="flex justify-between text-[12px] text-[#9ca3af] font-medium">
               <span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span>
             </div>
           </div>
@@ -77,7 +77,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
               <button
                 key={p}
                 onClick={() => setDraft(p)}
-                className={`flex-1 text-[12px] font-semibold py-2 rounded-lg transition-colors ${
+                className={`flex-1 text-[14px] font-semibold py-2 rounded-lg transition-colors ${
                   draft === p
                     ? "bg-[#0f1260] text-white"
                     : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
@@ -90,7 +90,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
 
           {/* Custom input */}
           <div className="flex items-center gap-3">
-            <label className="text-[12px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
+            <label className="text-[14px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
             <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
               <input
                 type="number"
@@ -98,9 +98,9 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
                 max={100}
                 value={draft}
                 onChange={e => setDraft(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="w-16 px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
+                className="w-16 px-2 py-2 text-[15px] text-center text-[#101828] outline-none"
               />
-              <span className="pr-3 text-[13px] text-[#667085] font-medium">%</span>
+              <span className="pr-3 text-[15px] text-[#667085] font-medium">%</span>
             </div>
           </div>
         </div>
@@ -109,13 +109,13 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
         <div className="px-6 py-4 border-t border-[#f3f4f6] flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="text-[13px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
+            className="text-[15px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
           >
             ยกเลิก
           </button>
           <button
             onClick={() => { onSave(draft); onClose(); }}
-            className="flex items-center gap-2 text-[13px] font-semibold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
+            className="flex items-center gap-2 text-[15px] font-semibold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             บันทึก
@@ -141,7 +141,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-[440px] mx-4 overflow-hidden">
         <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
-          <div className="text-[15px] font-semibold text-[#101828]">แก้ไขการแจ้งเตือนก่อนหมดอายุ</div>
+          <div className="text-[17px] font-semibold text-[#101828]">แก้ไขการแจ้งเตือนก่อนหมดอายุ</div>
           <button
             onClick={onClose}
             className="text-[#9ca3af] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
@@ -152,8 +152,8 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
 
         <div className="px-6 py-5 flex flex-col gap-5">
           <div className="flex items-center justify-center">
-            <div className="text-[72px] font-black text-[#b45309] leading-none tabular-nums">{draft}</div>
-            <div className="text-[18px] font-semibold text-[#667085] self-end mb-4 ml-2">วัน</div>
+            <div className="text-[74px] font-black text-[#b45309] leading-none tabular-nums">{draft}</div>
+            <div className="text-[20px] font-semibold text-[#667085] self-end mb-4 ml-2">วัน</div>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -166,7 +166,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
               onChange={e => setDraft(Number(e.target.value))}
               className="w-full accent-[#b45309] h-2"
             />
-            <div className="flex justify-between text-[10px] text-[#9ca3af] font-medium">
+            <div className="flex justify-between text-[12px] text-[#9ca3af] font-medium">
               <span>7 วัน</span><span>30 วัน</span><span>60 วัน</span><span>90 วัน</span>
             </div>
           </div>
@@ -176,7 +176,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
               <button
                 key={d}
                 onClick={() => setDraft(d)}
-                className={`text-[12px] font-semibold px-4 py-2 rounded-lg transition-colors ${
+                className={`text-[14px] font-semibold px-4 py-2 rounded-lg transition-colors ${
                   draft === d
                     ? "bg-[#b45309] text-white"
                     : "bg-[#f3f4f6] text-[#667085] hover:bg-[#e5e7eb]"
@@ -188,7 +188,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="text-[12px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
+            <label className="text-[14px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
             <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
               <input
                 type="number"
@@ -196,9 +196,9 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
                 max={90}
                 value={draft}
                 onChange={e => setDraft(Math.min(90, Math.max(7, Number(e.target.value))))}
-                className="w-16 px-2 py-2 text-[13px] text-center text-[#101828] outline-none"
+                className="w-16 px-2 py-2 text-[15px] text-center text-[#101828] outline-none"
               />
-              <span className="pr-3 text-[12px] text-[#667085] font-medium whitespace-nowrap">วัน</span>
+              <span className="pr-3 text-[14px] text-[#667085] font-medium whitespace-nowrap">วัน</span>
             </div>
           </div>
         </div>
@@ -206,13 +206,13 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
         <div className="px-6 py-4 border-t border-[#f3f4f6] flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="text-[13px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
+            className="text-[15px] font-semibold text-[#667085] hover:text-[#344054] px-4 py-2.5 rounded-lg hover:bg-[#f3f4f6] transition-colors"
           >
             ยกเลิก
           </button>
           <button
             onClick={() => { onSave(draft); onClose(); }}
-            className="flex items-center gap-2 text-[13px] font-semibold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
+            className="flex items-center gap-2 text-[15px] font-semibold px-5 py-2.5 rounded-xl bg-[#0f1260] text-white hover:bg-[#171b82] transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
             บันทึก
@@ -249,16 +249,16 @@ function SettingCard({
         {config.icon}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-semibold text-[#101828]">{config.title}</div>
-        <div className="text-[12px] text-[#667085] mt-0.5">{config.subtitle}</div>
+        <div className="text-[16px] font-semibold text-[#101828]">{config.title}</div>
+        <div className="text-[14px] text-[#667085] mt-0.5">{config.subtitle}</div>
       </div>
       <div className="text-right mr-2 shrink-0">
-        <div className="text-[32px] font-black text-[#101828] leading-none tabular-nums">{value}{config.unit}</div>
-        <div className="text-[10px] text-[#9ca3af] font-medium mt-1">ค่าปัจจุบัน</div>
+        <div className="text-[34px] font-black text-[#101828] leading-none tabular-nums">{value}{config.unit}</div>
+        <div className="text-[12px] text-[#9ca3af] font-medium mt-1">ค่าปัจจุบัน</div>
       </div>
       <button
         onClick={onEdit}
-        className="flex items-center gap-1.5 text-[12px] font-semibold text-[#171b82] border border-[#c7caee] bg-[#f0f2ff] hover:bg-[#e0e3ff] px-3.5 py-2 rounded-lg transition-colors shrink-0"
+        className="flex items-center gap-1.5 text-[14px] font-semibold text-[#171b82] border border-[#c7caee] bg-[#f0f2ff] hover:bg-[#e0e3ff] px-3.5 py-2 rounded-lg transition-colors shrink-0"
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         แก้ไข
@@ -369,7 +369,7 @@ export default function DiscountSettingsPage() {
     <div className="flex flex-col gap-4 max-w-[720px]">
       {/* Success toast */}
       {saved && (
-        <div className="fixed top-5 right-5 z-50 flex items-center gap-3 bg-[#071a0c] text-white text-[13px] font-semibold px-4 py-3 rounded-xl shadow-lg">
+        <div className="fixed top-5 right-5 z-50 flex items-center gap-3 bg-[#071a0c] text-white text-[15px] font-semibold px-4 py-3 rounded-xl shadow-lg">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           บันทึกการตั้งค่าเรียบร้อยแล้ว
         </div>
@@ -381,8 +381,8 @@ export default function DiscountSettingsPage() {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#171b82" strokeWidth="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
         </div>
         <div>
-          <div className="text-[14px] font-semibold text-[#101828]">ตั้งค่าส่วนลดสมาชิก</div>
-          <div className="text-[13px] text-[#667085] mt-1 leading-relaxed">
+          <div className="text-[16px] font-semibold text-[#101828]">ตั้งค่าส่วนลดสมาชิก</div>
+          <div className="text-[15px] text-[#667085] mt-1 leading-relaxed">
             กำหนดเปอร์เซ็นต์ส่วนลดค่าโดยสารสำหรับสมาชิกประเภทต่างๆ รวมถึงระยะเวลาแจ้งเตือนก่อนสิทธิ์หมดอายุ
             การเปลี่ยนแปลงจะมีผลกับสมาชิกที่ได้รับการอนุมัติใหม่เท่านั้น
           </div>
@@ -420,12 +420,12 @@ export default function DiscountSettingsPage() {
 
       {/* Footer bar */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] px-5 py-4 flex items-center justify-between">
-        <div className="text-[12px] text-[#9ca3af]">
+        <div className="text-[14px] text-[#9ca3af]">
           พนักงาน {settings.employeeDiscount}% · ข้าราชการ {settings.officialDiscount}% · ผู้สูงอายุ {settings.seniorDiscount}% · นักเรียน {settings.studentDiscount}% · ผู้พิการ {settings.disabledDiscount}% · แจ้งเตือน {settings.renewalReminderDays} วัน
         </div>
         <button
           onClick={handleReset}
-          className="text-[12px] font-semibold text-[#667085] hover:text-[#344054] px-3 py-2 rounded-lg hover:bg-[#f3f4f6] transition-colors shrink-0"
+          className="text-[14px] font-semibold text-[#667085] hover:text-[#344054] px-3 py-2 rounded-lg hover:bg-[#f3f4f6] transition-colors shrink-0"
         >
           คืนค่าเริ่มต้น
         </button>

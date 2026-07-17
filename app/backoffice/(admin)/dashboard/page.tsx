@@ -101,7 +101,7 @@ export default function DashboardPage() {
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.color}`}>
                 {s.icon}
               </div>
-              <span className={`text-[12px] font-semibold flex items-center gap-1 ${s.positive ? "text-[#059669]" : "text-[#dc2626]"}`}>
+              <span className={`text-[14px] font-semibold flex items-center gap-1 ${s.positive ? "text-[#059669]" : "text-[#dc2626]"}`}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   {s.positive ? <path d="M12 19V5M5 12l7-7 7 7"/> : <path d="M12 5v14M5 12l7 7 7-7"/>}
                 </svg>
@@ -109,10 +109,10 @@ export default function DashboardPage() {
               </span>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[28px] font-semibold text-[#101828]">{s.value}</span>
-              <span className="text-[14px] text-[#667085] font-medium">{s.unit}</span>
+              <span className="text-[30px] font-semibold text-[#101828]">{s.value}</span>
+              <span className="text-[16px] text-[#667085] font-medium">{s.unit}</span>
             </div>
-            <div className="text-[13px] text-[#667085] mt-0.5">{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
+            <div className="text-[15px] text-[#667085] mt-0.5">{s.label}{s.sub ? ` · ${s.sub}` : ""}</div>
           </div>
         ))}
       </div>
@@ -122,14 +122,14 @@ export default function DashboardPage() {
         {/* Recent bookings */}
         <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#f3f4f6]">
-            <span className="text-[15px] font-semibold text-[#101828]">การจองล่าสุด</span>
-            <a href="/backoffice/bookings" className="text-[13px] font-semibold text-[#171b82] hover:text-[#0f1260]">ดูทั้งหมด →</a>
+            <span className="text-[17px] font-semibold text-[#101828]">การจองล่าสุด</span>
+            <a href="/backoffice/bookings" className="text-[15px] font-semibold text-[#171b82] hover:text-[#0f1260]">ดูทั้งหมด →</a>
           </div>
-          <table className="w-full text-[13px]">
+          <table className="w-full text-[15px]">
             <thead>
               <tr className="border-b border-[#f3f4f6]">
                 {["เลขที่จอง", "ผู้โดยสาร", "เส้นทาง", "วันเดินทาง", "ยอดรวม", "สถานะ"].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold text-[#667085] uppercase tracking-wider">{h}</th>
+                  <th key={h} className="text-left px-5 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -138,13 +138,13 @@ export default function DashboardPage() {
                 const s = STATUS_BADGE[b.status];
                 return (
                   <tr key={b.id} className="hover:bg-[#f9fafb] transition-colors">
-                    <td className="px-5 py-3.5 font-mono text-[12px] font-semibold text-[#344054]">{b.id}</td>
+                    <td className="px-5 py-3.5 font-mono text-[14px] font-semibold text-[#344054]">{b.id}</td>
                     <td className="px-5 py-3.5 font-medium text-[#101828]">{b.name}</td>
                     <td className="px-5 py-3.5 text-[#667085]">{b.route}</td>
                     <td className="px-5 py-3.5 text-[#667085]">{b.date}</td>
                     <td className="px-5 py-3.5 font-semibold text-[#101828]">{b.total.toLocaleString()} ฿</td>
                     <td className="px-5 py-3.5">
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${s.cls}`}>{s.label}</span>
+                      <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full ${s.cls}`}>{s.label}</span>
                     </td>
                   </tr>
                 );
@@ -156,8 +156,8 @@ export default function DashboardPage() {
         {/* Today's trips */}
         <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-[#f3f4f6]">
-            <span className="text-[15px] font-semibold text-[#101828]">เที่ยวรถวันนี้</span>
-            <span className="text-[11px] font-semibold bg-[#f0f2ff] text-[#171b82] px-2 py-0.5 rounded-full">{TODAY_TRIPS.length} เที่ยว</span>
+            <span className="text-[17px] font-semibold text-[#101828]">เที่ยวรถวันนี้</span>
+            <span className="text-[13px] font-semibold bg-[#f0f2ff] text-[#171b82] px-2 py-0.5 rounded-full">{TODAY_TRIPS.length} เที่ยว</span>
           </div>
           <div className="divide-y divide-[#f9fafb]">
             {TODAY_TRIPS.map((t, i) => {
@@ -167,10 +167,10 @@ export default function DashboardPage() {
                 <div key={i} className="px-5 py-3.5">
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
-                      <div className="text-[13px] font-semibold text-[#101828]">{t.time} · {t.route}</div>
-                      <div className="text-[11px] text-[#9ca3af] mt-0.5">{t.type}</div>
+                      <div className="text-[15px] font-semibold text-[#101828]">{t.time} · {t.route}</div>
+                      <div className="text-[13px] text-[#9ca3af] mt-0.5">{t.type}</div>
                     </div>
-                    <span className={`text-[11px] font-semibold shrink-0 ${ts.cls}`}>{ts.label}</span>
+                    <span className={`text-[13px] font-semibold shrink-0 ${ts.cls}`}>{ts.label}</span>
                   </div>
                   {/* Seat bar */}
                   <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export default function DashboardPage() {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <span className="text-[11px] text-[#667085] shrink-0">{t.sold}/{t.total}</span>
+                    <span className="text-[13px] text-[#667085] shrink-0">{t.sold}/{t.total}</span>
                   </div>
                 </div>
               );

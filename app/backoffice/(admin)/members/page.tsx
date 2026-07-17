@@ -101,8 +101,8 @@ export default function MembersPage() {
             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
           <div>
-            <div className="text-[13px] font-semibold text-[#b45309]">มีสมาชิกที่ใกล้หมดอายุ</div>
-            <div className="text-[12px] text-[#92400e] mt-0.5">
+            <div className="text-[15px] font-semibold text-[#b45309]">มีสมาชิกที่ใกล้หมดอายุ</div>
+            <div className="text-[14px] text-[#92400e] mt-0.5">
               {expiringSoon.length} รายการ ภายใน {reminderDays} วัน:{" "}
               {expiringSoon.map((m, i) => (
                 <span key={m.id}>
@@ -143,9 +143,9 @@ export default function MembersPage() {
               {s.icon}
             </div>
             <div>
-              <div className="text-[12px] text-[#667085] font-medium">{s.label}</div>
-              <div className={`text-[24px] font-semibold mt-0.5 ${s.color}`}>
-                {s.value} <span className="text-[14px] font-medium text-[#667085]">{s.unit}</span>
+              <div className="text-[14px] text-[#667085] font-medium">{s.label}</div>
+              <div className={`text-[26px] font-semibold mt-0.5 ${s.color}`}>
+                {s.value} <span className="text-[16px] font-medium text-[#667085]">{s.unit}</span>
               </div>
             </div>
           </div>
@@ -162,7 +162,7 @@ export default function MembersPage() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="ค้นหา ชื่อ, อีเมล, เบอร์โทร..."
-              className="flex-1 text-[13px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
+              className="flex-1 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
             />
             {search && (
               <button onClick={() => setSearch("")} className="text-[#9ca3af] hover:text-[#344054]">
@@ -174,7 +174,7 @@ export default function MembersPage() {
           <div className="ml-auto flex items-center gap-2">
             <button
               onClick={exportCSV}
-              className="flex items-center gap-2 text-[12px] font-semibold text-[#344054] border border-[#d0d5dd] px-3.5 py-2 rounded-lg hover:bg-[#f9fafb] transition-colors"
+              className="flex items-center gap-2 text-[14px] font-semibold text-[#344054] border border-[#d0d5dd] px-3.5 py-2 rounded-lg hover:bg-[#f9fafb] transition-colors"
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               ส่งออก CSV
@@ -184,7 +184,7 @@ export default function MembersPage() {
 
         {/* Type filter */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">ประเภท</span>
+          <span className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">ประเภท</span>
           <div className="flex items-center gap-1">
             {TYPE_FILTER_TABS.map(tab => {
               const count = tab.key === "all" ? members.length : members.filter(m => m.memberType === tab.key).length;
@@ -192,12 +192,12 @@ export default function MembersPage() {
                 <button
                   key={tab.key}
                   onClick={() => setTypeFilter(tab.key)}
-                  className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                     typeFilter === tab.key ? "bg-[#0f1260] text-white" : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
                   }`}
                 >
                   {tab.label}
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${typeFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                  <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded-full ${typeFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                     {count}
                   </span>
                 </button>
@@ -208,7 +208,7 @@ export default function MembersPage() {
 
         {/* Status filter */}
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">สถานะ</span>
+          <span className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">สถานะ</span>
           <div className="flex items-center gap-1">
             {STATUS_FILTER_TABS.map(tab => {
               const count = tab.key === "all" ? members.length : members.filter(m => m.status === tab.key).length;
@@ -216,12 +216,12 @@ export default function MembersPage() {
                 <button
                   key={tab.key}
                   onClick={() => setStatusFilter(tab.key)}
-                  className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                  className={`flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                     statusFilter === tab.key ? "bg-[#0f1260] text-white" : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
                   }`}
                 >
                   {tab.label}
-                  <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                  <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                     {count}
                   </span>
                 </button>
@@ -233,18 +233,18 @@ export default function MembersPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
-        <table className="w-full text-[13px]">
+        <table className="w-full text-[15px]">
           <thead>
             <tr className="border-b border-[#f3f4f6]">
               {["รหัสสมาชิก", "ชื่อ-นามสกุล", "ประเภทสมาชิก", "สถานะ", "วันหมดอายุ", "ส่วนลด", "วันที่สมัคร", ""].map(h => (
-                <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left px-5 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f9fafb]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-[14px] text-[#9ca3af]">ไม่พบสมาชิก</td>
+                <td colSpan={8} className="px-5 py-12 text-center text-[16px] text-[#9ca3af]">ไม่พบสมาชิก</td>
               </tr>
             ) : filtered.map(m => {
               const soon = m.status === "approved" && isExpiringSoon(m.expiryDate, reminderDays);
@@ -254,18 +254,18 @@ export default function MembersPage() {
                   onClick={() => router.push(`/backoffice/members/${m.id}`)}
                   className="hover:bg-[#f9fafb] transition-colors cursor-pointer"
                 >
-                  <td className="px-5 py-3.5 font-mono text-[12px] font-semibold text-[#344054] whitespace-nowrap">{m.id}</td>
+                  <td className="px-5 py-3.5 font-mono text-[14px] font-semibold text-[#344054] whitespace-nowrap">{m.id}</td>
                   <td className="px-5 py-3.5">
                     <div className="font-semibold text-[#101828]">{m.name}</div>
-                    <div className="text-[11px] text-[#9ca3af] mt-0.5">{m.email}</div>
+                    <div className="text-[13px] text-[#9ca3af] mt-0.5">{m.email}</div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.memberType]}`}>
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.memberType]}`}>
                       {MEMBER_TYPE_LABELS[m.memberType]}
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[m.status]}`}>
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[m.status]}`}>
                       {MEMBER_STATUS_LABELS[m.status]}
                     </span>
                   </td>
@@ -274,7 +274,7 @@ export default function MembersPage() {
                       <div className={soon ? "text-[#b45309] font-semibold" : "text-[#667085]"}>
                         {isoToThai(m.expiryDate)}
                         {soon && (
-                          <div className="text-[10px] font-semibold text-[#b45309] mt-0.5 flex items-center gap-1">
+                          <div className="text-[12px] font-semibold text-[#b45309] mt-0.5 flex items-center gap-1">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="#b45309"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
                             เหลือ {daysUntilExpiry(m.expiryDate)} วัน
                           </div>
@@ -295,7 +295,7 @@ export default function MembersPage() {
                   <td className="px-5 py-3.5">
                     <button
                       onClick={e => { e.stopPropagation(); router.push(`/backoffice/members/${m.id}`); }}
-                      className="flex items-center gap-1 text-[12px] font-semibold text-[#171b82] hover:text-[#0f1260] px-3 py-1.5 rounded-lg hover:bg-[#f0f2ff] transition-colors whitespace-nowrap"
+                      className="flex items-center gap-1 text-[14px] font-semibold text-[#171b82] hover:text-[#0f1260] px-3 py-1.5 rounded-lg hover:bg-[#f0f2ff] transition-colors whitespace-nowrap"
                     >
                       ดูรายละเอียด
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M9 18l6-6-6-6"/></svg>
@@ -307,7 +307,7 @@ export default function MembersPage() {
           </tbody>
         </table>
 
-        <div className="px-5 py-3 border-t border-[#f3f4f6] flex items-center justify-between text-[12px] text-[#667085]">
+        <div className="px-5 py-3 border-t border-[#f3f4f6] flex items-center justify-between text-[14px] text-[#667085]">
           <span>แสดง {filtered.length} จาก {members.length} รายการ</span>
         </div>
       </div>

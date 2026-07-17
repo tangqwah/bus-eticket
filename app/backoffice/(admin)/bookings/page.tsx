@@ -72,9 +72,9 @@ export default function BookingsPage() {
         ].map(s => (
           <div key={s.label} className="bg-white rounded-2xl border border-[#e5e7eb] px-5 py-4 flex items-center gap-4">
             <div>
-              <div className="text-[12px] text-[#667085] font-medium">{s.label}</div>
-              <div className={`text-[24px] font-semibold mt-0.5 ${s.cls}`}>
-                {s.value} <span className="text-[14px] font-medium text-[#667085]">{s.unit}</span>
+              <div className="text-[14px] text-[#667085] font-medium">{s.label}</div>
+              <div className={`text-[26px] font-semibold mt-0.5 ${s.cls}`}>
+                {s.value} <span className="text-[16px] font-medium text-[#667085]">{s.unit}</span>
               </div>
             </div>
           </div>
@@ -89,7 +89,7 @@ export default function BookingsPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหา รหัสจอง, ชื่อ, เบอร์โทร, เส้นทาง..."
-            className="flex-1 text-[13px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
+            className="flex-1 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
           />
           {search && (
             <button onClick={() => setSearch("")} className="text-[#9ca3af] hover:text-[#344054]">
@@ -103,14 +103,14 @@ export default function BookingsPage() {
             <button
               key={tab.key}
               onClick={() => setStatusFilter(tab.key)}
-              className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              className={`flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
                 statusFilter === tab.key
                   ? "bg-[#0f1260] text-white"
                   : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
               }`}
             >
               {tab.label}
-              <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+              <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                 {tab.count(MOCK_BOOKINGS)}
               </span>
             </button>
@@ -120,44 +120,44 @@ export default function BookingsPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
-        <table className="w-full text-[13px]">
+        <table className="w-full text-[15px]">
           <thead>
             <tr className="border-b border-[#f3f4f6]">
               {["เลขที่จอง", "วันที่จอง", "ผู้โดยสาร", "ประเภทผู้ใช้", "เส้นทาง", "วันเดินทาง", "ที่นั่ง", "ยอดรวม", "ชำระผ่าน", "สถานะ", ""].map(h => (
-                <th key={h} className="text-left px-4 py-3 text-[11px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left px-4 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f9fafb]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={11} className="px-5 py-12 text-center text-[14px] text-[#9ca3af]">ไม่พบการจอง</td>
+                <td colSpan={11} className="px-5 py-12 text-center text-[16px] text-[#9ca3af]">ไม่พบการจอง</td>
               </tr>
             ) : filtered.map(b => {
               const st = STATUS_MAP[b.status];
               return (
                 <tr key={b.id} className="hover:bg-[#f9fafb] transition-colors">
-                  <td className="px-4 py-3.5 font-mono text-[12px] font-semibold text-[#344054] whitespace-nowrap">{b.id}</td>
+                  <td className="px-4 py-3.5 font-mono text-[14px] font-semibold text-[#344054] whitespace-nowrap">{b.id}</td>
                   <td className="px-4 py-3.5 text-[#667085] whitespace-nowrap">{b.date}</td>
                   <td className="px-4 py-3.5">
                     <div className="font-medium text-[#101828]">{b.passenger}</div>
-                    <div className="text-[11px] text-[#9ca3af] mt-0.5">{b.phone}</div>
+                    <div className="text-[13px] text-[#9ca3af] mt-0.5">{b.phone}</div>
                   </td>
                   <td className="px-4 py-3.5 whitespace-nowrap">
                     {b.userType === "guest" ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#f3f4f6] text-[#667085]">
+                      <span className="inline-flex items-center gap-1 text-[13px] font-semibold px-2.5 py-1 rounded-full bg-[#f3f4f6] text-[#667085]">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                         ไม่ได้เข้าสู่ระบบ
                       </span>
                     ) : (
-                      <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full ${MEMBER_TYPE_COLORS[b.userType]}`}>
+                      <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full ${MEMBER_TYPE_COLORS[b.userType]}`}>
                         {MEMBER_TYPE_LABELS[b.userType]}
                       </span>
                     )}
                   </td>
                   <td className="px-4 py-3.5">
                     <div className="text-[#101828] font-medium">{b.from}</div>
-                    <div className="text-[#9ca3af] text-[11px] flex items-center gap-1 mt-0.5">
+                    <div className="text-[#9ca3af] text-[13px] flex items-center gap-1 mt-0.5">
                       <svg width="9" height="9" viewBox="0 0 24 24" fill="#9ca3af"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                       {b.to}
                     </div>
@@ -167,7 +167,7 @@ export default function BookingsPage() {
                   <td className="px-4 py-3.5 font-semibold text-[#101828] whitespace-nowrap">{b.total.toLocaleString()} ฿</td>
                   <td className="px-4 py-3.5 text-[#667085] whitespace-nowrap">{b.paymentMethod}</td>
                   <td className="px-4 py-3.5">
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${st.cls}`}>{st.label}</span>
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${st.cls}`}>{st.label}</span>
                   </td>
                   <td className="px-4 py-3.5">
                     <button className="text-[#667085] hover:text-[#344054] p-1.5 rounded-lg hover:bg-[#f3f4f6] transition-colors">
@@ -180,7 +180,7 @@ export default function BookingsPage() {
           </tbody>
         </table>
 
-        <div className="px-5 py-3 border-t border-[#f3f4f6] flex items-center justify-between text-[12px] text-[#667085]">
+        <div className="px-5 py-3 border-t border-[#f3f4f6] flex items-center justify-between text-[14px] text-[#667085]">
           <span>
             แสดง {filtered.length} จาก {MOCK_BOOKINGS.length} รายการ
             {statusFilter === "confirmed" && (

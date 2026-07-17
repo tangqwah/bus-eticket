@@ -16,7 +16,7 @@ function DocCell({ memberType, documentLabel }: { memberType: Member["memberType
     return <span className="text-[#9ca3af]">—</span>;
   }
   return (
-    <span className="text-[11px] text-[#667085] font-medium">
+    <span className="text-[13px] text-[#667085] font-medium">
       {documentLabel ?? MEMBER_TYPE_DOC_LABEL[memberType]}
     </span>
   );
@@ -49,23 +49,23 @@ export default function PendingMembersPage() {
               <polyline points="20 6 9 17 4 12"/>
             </svg>
           </div>
-          <div className="text-[15px] font-semibold text-[#101828]">ไม่มีคำขอรอตรวจสอบ</div>
-          <div className="text-[13px] text-[#667085]">คำขอสมาชิกใหม่จะปรากฏที่นี่</div>
+          <div className="text-[17px] font-semibold text-[#101828]">ไม่มีคำขอรอตรวจสอบ</div>
+          <div className="text-[15px] text-[#667085]">คำขอสมาชิกใหม่จะปรากฏที่นี่</div>
         </div>
       ) : (
         <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
           <div className="px-5 py-4 border-b border-[#f3f4f6] flex items-center gap-3">
-            <span className="text-[14px] font-semibold text-[#101828]">คำขอรอตรวจสอบ</span>
-            <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[#fef9c3] text-[#b45309]">
+            <span className="text-[16px] font-semibold text-[#101828]">คำขอรอตรวจสอบ</span>
+            <span className="text-[13px] font-semibold px-2.5 py-1 rounded-full bg-[#fef9c3] text-[#b45309]">
               {pending.length} รายการ
             </span>
           </div>
 
-          <table className="w-full text-[13px]">
+          <table className="w-full text-[15px]">
             <thead>
               <tr className="border-b border-[#f3f4f6]">
                 {["#", "ชื่อ-นามสกุล", "ประเภทสมาชิก", "วันที่ยื่น", "เอกสารที่ต้องการ", ""].map(h => (
-                  <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">
+                  <th key={h} className="text-left px-5 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -79,16 +79,16 @@ export default function PendingMembersPage() {
                   className="hover:bg-[#f9fafb] transition-colors cursor-pointer"
                 >
                   <td className="px-5 py-3.5">
-                    <span className="inline-flex w-6 h-6 rounded-full bg-[#f3f4f6] text-[11px] font-semibold text-[#667085] items-center justify-center">
+                    <span className="inline-flex w-6 h-6 rounded-full bg-[#f3f4f6] text-[13px] font-semibold text-[#667085] items-center justify-center">
                       {i + 1}
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="font-semibold text-[#101828]">{m.name}</div>
-                    <div className="text-[11px] text-[#9ca3af] mt-0.5">{m.email}</div>
+                    <div className="text-[13px] text-[#9ca3af] mt-0.5">{m.email}</div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.memberType]}`}>
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.memberType]}`}>
                       {MEMBER_TYPE_LABELS[m.memberType]}
                     </span>
                   </td>
@@ -101,7 +101,7 @@ export default function PendingMembersPage() {
                   <td className="px-5 py-3.5">
                     <button
                       onClick={e => { e.stopPropagation(); router.push(`/backoffice/members/${m.id}`); }}
-                      className="flex items-center gap-1 text-[12px] font-semibold text-[#171b82] hover:text-[#0f1260] px-3 py-1.5 rounded-lg hover:bg-[#f0f2ff] transition-colors whitespace-nowrap"
+                      className="flex items-center gap-1 text-[14px] font-semibold text-[#171b82] hover:text-[#0f1260] px-3 py-1.5 rounded-lg hover:bg-[#f0f2ff] transition-colors whitespace-nowrap"
                     >
                       ตรวจสอบ
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -114,7 +114,7 @@ export default function PendingMembersPage() {
             </tbody>
           </table>
 
-          <div className="px-5 py-3 border-t border-[#f3f4f6] text-[12px] text-[#667085]">
+          <div className="px-5 py-3 border-t border-[#f3f4f6] text-[14px] text-[#667085]">
             เรียงลำดับตามวันที่ยื่น — เก่าสุดก่อน (FIFO)
           </div>
         </div>

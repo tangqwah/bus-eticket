@@ -42,8 +42,8 @@ export default function RoutesPage() {
     <div className="flex flex-col gap-4 max-w-[1200px]">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <p className="text-[14px] text-[#667085]">{MOCK_ROUTES.length} เส้นทางทั้งหมด · {MOCK_ROUTES.filter(r => r.active).length} เส้นทางที่เปิดให้บริการ</p>
-        <button className="flex items-center gap-2 bg-[#0f1260] text-white text-[13px] font-semibold px-4 py-2.5 rounded-lg hover:bg-[#171b82] transition-colors">
+        <p className="text-[16px] text-[#667085]">{MOCK_ROUTES.length} เส้นทางทั้งหมด · {MOCK_ROUTES.filter(r => r.active).length} เส้นทางที่เปิดให้บริการ</p>
+        <button className="flex items-center gap-2 bg-[#0f1260] text-white text-[15px] font-semibold px-4 py-2.5 rounded-lg hover:bg-[#171b82] transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           เพิ่มเส้นทาง
         </button>
@@ -57,7 +57,7 @@ export default function RoutesPage() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ค้นหา รหัส, ต้นทาง, ปลายทาง..."
-            className="flex-1 text-[13px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
+            className="flex-1 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
           />
           {search && (
             <button onClick={() => setSearch("")} className="text-[#9ca3af] hover:text-[#344054]">
@@ -66,7 +66,7 @@ export default function RoutesPage() {
           )}
         </div>
 
-        <label className="flex items-center gap-2 cursor-pointer text-[13px] font-medium text-[#344054]">
+        <label className="flex items-center gap-2 cursor-pointer text-[15px] font-medium text-[#344054]">
           <button
             role="switch"
             aria-checked={activeOnly}
@@ -81,27 +81,27 @@ export default function RoutesPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
-        <table className="w-full text-[13px]">
+        <table className="w-full text-[15px]">
           <thead>
             <tr className="border-b border-[#f3f4f6]">
               {["รหัส", "เส้นทาง", "ระยะทาง", "ระยะเวลา", "ประเภทรถ", "ราคาเริ่มต้น", "เที่ยว/วัน", "สถานะ", ""].map(h => (
-                <th key={h} className="text-left px-5 py-3 text-[11px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
+                <th key={h} className="text-left px-5 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#f9fafb]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-5 py-12 text-center text-[14px] text-[#9ca3af]">ไม่พบเส้นทาง</td>
+                <td colSpan={9} className="px-5 py-12 text-center text-[16px] text-[#9ca3af]">ไม่พบเส้นทาง</td>
               </tr>
             ) : filtered.map(r => (
               <tr key={r.code} className="hover:bg-[#f9fafb] transition-colors">
-                <td className="px-5 py-4 font-mono text-[12px] font-semibold text-[#171b82]">{r.code}</td>
+                <td className="px-5 py-4 font-mono text-[14px] font-semibold text-[#171b82]">{r.code}</td>
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-2">
                     <div className="text-right">
                       <div className="font-semibold text-[#101828]">{r.from}</div>
-                      <div className="text-[11px] text-[#9ca3af] mt-0.5">{r.fromStation}</div>
+                      <div className="text-[13px] text-[#9ca3af] mt-0.5">{r.fromStation}</div>
                     </div>
                     <div className="flex flex-col items-center gap-0.5 shrink-0 px-1">
                       <div className="w-1.5 h-1.5 rounded-full border-2 border-[#171b82]" />
@@ -110,7 +110,7 @@ export default function RoutesPage() {
                     </div>
                     <div>
                       <div className="font-semibold text-[#101828]">{r.to}</div>
-                      <div className="text-[11px] text-[#9ca3af] mt-0.5">{r.toStation}</div>
+                      <div className="text-[13px] text-[#9ca3af] mt-0.5">{r.toStation}</div>
                     </div>
                   </div>
                 </td>
@@ -119,7 +119,7 @@ export default function RoutesPage() {
                 <td className="px-5 py-4">
                   <div className="flex flex-wrap gap-1">
                     {r.busTypes.map(bt => (
-                      <span key={bt} className="text-[10px] font-semibold bg-[#f0f2ff] text-[#171b82] px-2 py-0.5 rounded-full whitespace-nowrap">{bt}</span>
+                      <span key={bt} className="text-[12px] font-semibold bg-[#f0f2ff] text-[#171b82] px-2 py-0.5 rounded-full whitespace-nowrap">{bt}</span>
                     ))}
                   </div>
                 </td>
@@ -134,7 +134,7 @@ export default function RoutesPage() {
                   )}
                 </td>
                 <td className="px-5 py-4">
-                  <span className={`text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${r.active ? "bg-[#d1fae5] text-[#059669]" : "bg-[#f3f4f6] text-[#9ca3af]"}`}>
+                  <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${r.active ? "bg-[#d1fae5] text-[#059669]" : "bg-[#f3f4f6] text-[#9ca3af]"}`}>
                     {r.active ? "เปิดบริการ" : "ปิดบริการ"}
                   </span>
                 </td>
@@ -157,7 +157,7 @@ export default function RoutesPage() {
           </tbody>
         </table>
 
-        <div className="px-5 py-3 border-t border-[#f3f4f6] flex items-center justify-between text-[12px] text-[#667085]">
+        <div className="px-5 py-3 border-t border-[#f3f4f6] flex items-center justify-between text-[14px] text-[#667085]">
           <span>แสดง {filtered.length} จาก {MOCK_ROUTES.length} เส้นทาง</span>
         </div>
       </div>

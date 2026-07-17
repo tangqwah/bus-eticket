@@ -146,8 +146,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-3">
             <img src={BKS_LOGO} alt="BKS" className="h-7 w-auto brightness-0 invert shrink-0" />
             <div className="min-w-0">
-              <div className="text-white text-[13px] font-semibold leading-tight">ระบบหลังบ้าน</div>
-              <div className="text-white/50 text-[10px] font-medium mt-0.5">BKS Backoffice</div>
+              <div className="text-white text-[15px] font-semibold leading-tight">ระบบหลังบ้าน</div>
+              <div className="text-white/50 text-[12px] font-medium mt-0.5">BKS Backoffice</div>
             </div>
           </div>
         </div>
@@ -160,7 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[15px] font-medium transition-all ${
                   active
                     ? "bg-white/15 text-white"
                     : "text-white/60 hover:bg-white/8 hover:text-white/90"
@@ -170,7 +170,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 {item.label}
                 <div className="ml-auto flex items-center gap-1.5">
                   {item.pendingBadge && pendingCount > 0 && (
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#cd416e] text-white min-w-[18px] text-center leading-tight">
+                    <span className="text-[12px] font-bold px-1.5 py-0.5 rounded-full bg-[#cd416e] text-white min-w-[18px] text-center leading-tight">
                       {pendingCount}
                     </span>
                   )}
@@ -184,17 +184,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* User */}
         <div className="px-3 py-4 border-t border-white/10">
           <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
-            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-[13px] font-semibold shrink-0">
+            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white text-[15px] font-semibold shrink-0">
               A
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-white text-[13px] font-semibold truncate">{admin.name}</div>
-              <div className="text-white/50 text-[11px]">Administrator</div>
+              <div className="text-white text-[15px] font-semibold truncate">{admin.name}</div>
+              <div className="text-white/50 text-[13px]">Administrator</div>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium text-white/60 hover:bg-white/10 hover:text-white/90 transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[15px] font-medium text-white/60 hover:bg-white/10 hover:text-white/90 transition-colors"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
               <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
@@ -211,12 +211,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Topbar */}
         <header className="h-14 bg-white border-b border-[#e5e7eb] flex items-center px-6 gap-4 shrink-0">
           <div className="flex-1">
-            <h1 className="text-[16px] font-semibold text-[#101828]">{pageTitle}</h1>
+            <h1 className="text-[18px] font-semibold text-[#101828]">{pageTitle}</h1>
           </div>
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-[12px] font-medium text-[#667085] hover:text-[#344054] border border-[#e5e7eb] px-3 py-1.5 rounded-lg hover:bg-[#f9fafb] transition-colors"
+              className="flex items-center gap-1.5 text-[14px] font-medium text-[#667085] hover:text-[#344054] border border-[#e5e7eb] px-3 py-1.5 rounded-lg hover:bg-[#f9fafb] transition-colors"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               หน้าลูกค้า
