@@ -160,7 +160,7 @@ export default function LoginPage() {
                 {/* Username */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[14px] font-medium text-[#344054]">รหัสผู้ใช้งาน (Username)</label>
-                  <div className="flex items-center gap-2 bg-white border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 shadow-[0px_1px_1px_rgba(16,24,40,0.05)]">
+                  <div className="flex items-center gap-2 bg-white border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 shadow-[0px_1px_1px_rgba(16,24,40,0.05)] focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
                     <IconUser />
                     <input
                       type="text"
@@ -180,7 +180,7 @@ export default function LoginPage() {
                       ลืมรหัสผ่าน?
                     </button>
                   </div>
-                  <div className="flex items-center gap-2 bg-white border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 shadow-[0px_1px_1px_rgba(16,24,40,0.05)]">
+                  <div className="flex items-center gap-2 bg-white border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 shadow-[0px_1px_1px_rgba(16,24,40,0.05)] focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
                     <IconLock />
                     <input
                       type="password"

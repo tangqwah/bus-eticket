@@ -321,7 +321,7 @@ export default function Home() {
             <div className="flex items-end gap-3">
               <div className="flex-1">
                 <label className="block text-[12px] text-[#667085] mb-1.5">วันที่เดินทาง</label>
-                <div className="flex items-center border border-[#d0d5dd] rounded-lg px-3 py-2.5 gap-2 hover:border-[#9ca3af]">
+                <div className="flex items-center border border-[#d0d5dd] rounded-lg px-3 py-2.5 gap-2 hover:border-[#9ca3af] focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
                   <svg className="text-[#667085] shrink-0" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
                   </svg>

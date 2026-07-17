@@ -237,7 +237,7 @@ export default function SearchPage() {
               value={busNo}
               onChange={e => setBusNo(e.target.value)}
               placeholder="เช่น 081"
-              className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] placeholder:text-[#c0c7d0] outline-none focus:border-[#171b82] transition-colors"
+              className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[13px] text-[#101828] placeholder:text-[#c0c7d0] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82] transition-colors"
             />
           </FilterSection>
 

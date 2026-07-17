@@ -91,7 +91,7 @@ function DiscountModal({ title, value: initial, onClose, onSave }: DiscountModal
           {/* Custom input */}
           <div className="flex items-center gap-3">
             <label className="text-[14px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
-            <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
+            <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82]">
               <input
                 type="number"
                 min={0}
@@ -189,7 +189,7 @@ function RenewalModal({ value: initial, onClose, onSave }: RenewalModalProps) {
 
           <div className="flex items-center gap-3">
             <label className="text-[14px] font-semibold text-[#344054] shrink-0">กำหนดเอง:</label>
-            <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden">
+            <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82]">
               <input
                 type="number"
                 min={7}

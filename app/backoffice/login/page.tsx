@@ -44,7 +44,7 @@ export default function BackofficeLoginPage() {
           <form onSubmit={handleLogin} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[15px] font-semibold text-[#344054]">รหัสผู้ใช้งาน</label>
-              <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3.5 py-2.5">
+              <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                 <input
                   type="text"
@@ -58,7 +58,7 @@ export default function BackofficeLoginPage() {
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[15px] font-semibold text-[#344054]">รหัสผ่าน</label>
-              <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3.5 py-2.5">
+              <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8"><rect x="5" y="11" width="14" height="11" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
                 <input
                   type="password"

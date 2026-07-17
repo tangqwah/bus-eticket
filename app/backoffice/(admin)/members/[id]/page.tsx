@@ -518,7 +518,7 @@ export default function MemberDetailPage() {
                           onChange={e => setEditDiscount(Number(e.target.value))}
                           className="flex-1 accent-[#171b82]"
                         />
-                        <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20">
+                        <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20 focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82]">
                           <input
                             type="number"
                             min={0}
@@ -653,7 +653,7 @@ export default function MemberDetailPage() {
                       onChange={e => setApproveDiscount(Number(e.target.value))}
                       className="flex-1 accent-[#171b82]"
                     />
-                    <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20">
+                    <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20 focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82]">
                       <input
                         type="number"
                         min={0}
@@ -711,7 +711,7 @@ export default function MemberDetailPage() {
                 onChange={e => setRejectReason(e.target.value)}
                 placeholder="ระบุเหตุผลที่ไม่อนุมัติ..."
                 rows={4}
-                className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none focus:border-[#dc2626] focus:ring-2 focus:ring-[#dc2626]/10 resize-none"
+                className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 resize-none"
               />
               {!rejectReason.trim() && (
                 <p className="text-[13px] text-[#9ca3af] mt-1">กรุณาระบุเหตุผลก่อนดำเนินการ</p>

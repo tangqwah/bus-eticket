@@ -83,7 +83,7 @@ export default function BookingsPage() {
 
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4 flex items-center gap-4">
-        <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3 py-2 flex-1 max-w-sm">
+        <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3 py-2 flex-1 max-w-sm focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
           <input
             value={search}

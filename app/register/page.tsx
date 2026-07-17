@@ -141,7 +141,7 @@ export default function RegisterPage() {
     router.push("/login");
   };
 
-  const inputCls = "w-full bg-white border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 text-[16px] text-[#101828] placeholder:text-[#667085] outline-none focus:border-[#cd416e] focus:ring-1 focus:ring-[#cd416e] shadow-[0px_1px_1px_rgba(16,24,40,0.05)]";
+  const inputCls = "w-full bg-white border border-[#d0d5dd] rounded-lg px-3.5 py-2.5 text-[16px] text-[#101828] placeholder:text-[#667085] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82] shadow-[0px_1px_1px_rgba(16,24,40,0.05)]";
   const labelCls = "text-[14px] font-medium text-[#344054]";
   const requiredStar = <span className="text-[#f04438]"> *</span>;
 
