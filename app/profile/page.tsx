@@ -4,14 +4,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { readDraft, thaiDateLong, cityOf, stationOf, paxFullName, type BookingDraft } from "@/lib/bookingStore";
-import { PERSON_TYPES, APPROVAL_STATUS_LABELS, APPROVAL_STATUS_COLORS, isoToThai as memberIsoToThai, validateThaiId, type ApprovalStatus } from "@/lib/mockMembers";
+import { PERSON_TYPES, isoToThai as memberIsoToThai, validateThaiId, type ApprovalStatus } from "@/lib/mockMembers";
 import { THAI_PROVINCES, getDistricts, getSubDistricts, getPostCode } from "@/lib/thaiAddress";
 
 type User = { username: string; name: string; email: string; phone: string };
 
-type Section = "profile" | "my-booking" | "booking-history" | "passengers" | "points" | "coupons" | "membership";
-
-type MemberApplication = {
+type UserProfile = {
   title: string;
   first_name: string;
   last_name: string;
@@ -27,10 +25,38 @@ type MemberApplication = {
   district: string;
   province: string;
   post_code: string;
-  person_type_code: string;
-  approval_status: ApprovalStatus;
-  member_no?: string;
-  submitted_at: string;
+};
+
+const EMPTY_PROFILE: UserProfile = {
+  title: "นาย", first_name: "", last_name: "", gender: "male",
+  birth_date: "", nationality: "ไทย", id_card: "", passport_no: "",
+  tel_no: "", email: "", address: "", sub_district: "", district: "",
+  province: "", post_code: "",
+};
+
+function parseDisplayName(name: string): Pick<UserProfile, "title" | "first_name" | "last_name"> {
+  const titles = ["นางสาว", "นาง", "นาย", "เด็กชาย", "เด็กหญิง", "นาวาอากาศเอก", "พ.ต.อ.", "พ.ต.ท.", "ร.ต.อ."];
+  for (const title of titles) {
+    if (name.startsWith(title)) {
+      const rest = name.slice(title.length).trim();
+      const spaceIdx = rest.indexOf(" ");
+      if (spaceIdx === -1) return { title, first_name: rest, last_name: "" };
+      return { title, first_name: rest.slice(0, spaceIdx), last_name: rest.slice(spaceIdx + 1) };
+    }
+  }
+  const parts = name.split(" ");
+  return { title: "", first_name: parts[0] ?? "", last_name: parts.slice(1).join(" ") };
+}
+
+type Section = "profile" | "my-booking" | "booking-history" | "passengers" | "points" | "coupons";
+
+type MemberApplication = {
+  title: string; first_name: string; last_name: string; gender: string;
+  birth_date: string; nationality: string; id_card: string; passport_no: string;
+  tel_no: string; email: string; address: string; sub_district: string;
+  district: string; province: string; post_code: string;
+  person_type_code: string; approval_status: ApprovalStatus;
+  member_no?: string; submitted_at: string;
 };
 
 const MOCK_UPCOMING = [
@@ -128,11 +154,6 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
     label: "คูปองของฉัน",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
   },
-  {
-    id: "membership",
-    label: "สมาชิกสิทธิพิเศษ",
-    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>,
-  },
 ];
 
 type Booking = typeof MOCK_UPCOMING[0] | typeof MOCK_HISTORY[0];
@@ -185,7 +206,6 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-[#f3f4f6] rounded-2xl shadow-2xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
-        {/* Modal header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[#e5e7eb] bg-white rounded-t-2xl sticky top-0 z-10">
           <span className="text-[15px] font-semibold text-[#101828]">รายละเอียดตั๋ว</span>
           <div className="flex items-center gap-3">
@@ -201,12 +221,9 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
             </button>
           </div>
         </div>
-
-        {/* Tickets */}
         <div className="p-4 flex flex-col gap-4">
           {booking.tickets.map((ticket, i) => (
             <div key={i} className="bg-white rounded-2xl border border-[#e0e0e0] shadow-sm overflow-hidden">
-              {/* Ticket header */}
               <div className="bg-[#171b82] px-5 py-3.5 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img src={BKS_LOGO} alt="BKS" className="h-6 w-auto brightness-0 invert" />
@@ -220,8 +237,6 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
                   <div className="text-white text-[13px] font-semibold tracking-wider">{booking.id}</div>
                 </div>
               </div>
-
-              {/* Route */}
               <div className="px-5 pt-4 pb-3">
                 <div className="flex items-center gap-3">
                   <div className="text-center min-w-[70px]">
@@ -244,8 +259,6 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
                   </div>
                 </div>
               </div>
-
-              {/* Details grid */}
               <div className="mx-4 mb-3 bg-[#f9fafb] rounded-xl p-3.5 grid grid-cols-3 gap-3 text-[12px]">
                 {[
                   ["วันที่เดินทาง", booking.date],
@@ -261,15 +274,11 @@ function TicketModal({ booking, onClose }: { booking: UpcomingBooking; onClose: 
                   </div>
                 ))}
               </div>
-
-              {/* Tear line */}
               <div className="flex items-center gap-2 mx-4 my-3">
                 <div className="flex-1 border-t-2 border-dashed border-[#e5e7eb]" />
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="#d1d5db"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/></svg>
                 <div className="flex-1 border-t-2 border-dashed border-[#e5e7eb]" />
               </div>
-
-              {/* Barcode */}
               <div className="flex flex-col items-center gap-2 pb-5">
                 <Barcode />
                 <div className="text-[13px] font-semibold text-[#101828] tracking-[0.15em]">{booking.id}-{i + 1}</div>
@@ -348,28 +357,35 @@ export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [active, setActive] = useState<Section>("profile");
-  const [editing, setEditing] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [ticketModal, setTicketModal] = useState<UpcomingBooking | null>(null);
   const [draftBooking, setDraftBooking] = useState<BookingDraft | null>(null);
 
-  // Membership application
+  // Profile — unified personal + contact form
+  const [profileForm, setProfileForm] = useState<UserProfile>(EMPTY_PROFILE);
+  const [profileEditing, setProfileEditing] = useState(false);
+  const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
+
+  // Membership
   const [memberApp, setMemberApp] = useState<MemberApplication | null>(null);
-  const [memberForm, setMemberForm] = useState({
-    title: "นาย", first_name: "", last_name: "", gender: "male",
-    birth_date: "", nationality: "ไทย", id_card: "", passport_no: "",
-    tel_no: "", email: "", address: "", sub_district: "", district: "",
-    province: "", post_code: "", person_type_code: "general",
-  });
-  const [memberErrors, setMemberErrors] = useState<Record<string, string>>({});
-  const [memberSubmitting, setMemberSubmitting] = useState(false);
+  const [memberTypeCode, setMemberTypeCode] = useState("general");
+  const [memberProfileIncomplete, setMemberProfileIncomplete] = useState(false);
+  const [memberFormOpen, setMemberFormOpen] = useState(false);
+  const [docFile, setDocFile] = useState<File | null>(null);
 
   useEffect(() => {
     const raw = localStorage.getItem("bks_user");
     if (!raw) { router.push("/login"); return; }
     const u: User = JSON.parse(raw);
     setUser(u);
-    setForm({ name: u.name, email: u.email, phone: u.phone });
+
+    const profileRaw = localStorage.getItem("bks_user_profile");
+    if (profileRaw) {
+      setProfileForm(JSON.parse(profileRaw));
+    } else {
+      // Seed from bks_user so the user sees their existing name/contact
+      const parsed = parseDisplayName(u.name);
+      setProfileForm(f => ({ ...f, ...parsed, email: u.email, tel_no: u.phone }));
+    }
 
     const draft = readDraft();
     if (draft?.bookingNo && draft.passengers && draft.seats) {
@@ -380,25 +396,41 @@ export default function ProfilePage() {
     if (appRaw) {
       const app: MemberApplication = JSON.parse(appRaw);
       setMemberApp(app);
-      setMemberForm({
-        title: app.title, first_name: app.first_name, last_name: app.last_name,
-        gender: app.gender, birth_date: app.birth_date, nationality: app.nationality,
-        id_card: app.id_card, passport_no: app.passport_no, tel_no: app.tel_no,
-        email: app.email, address: app.address, sub_district: app.sub_district,
-        district: app.district, province: app.province, post_code: app.post_code,
-        person_type_code: app.person_type_code,
-      });
-    } else if (u) {
-      setMemberForm(f => ({ ...f, email: u.email, tel_no: u.phone }));
+      setMemberTypeCode(app.person_type_code);
     }
   }, []);
 
-  const handleSave = () => {
-    if (!user) return;
-    const updated = { ...user, ...form };
-    localStorage.setItem("bks_user", JSON.stringify(updated));
-    setUser(updated);
-    setEditing(false);
+  const handleProfileSave = () => {
+    const errs: Record<string, string> = {};
+    if (!profileForm.first_name.trim()) errs.first_name = "กรุณากรอกชื่อ";
+    if (!profileForm.last_name.trim()) errs.last_name = "กรุณากรอกนามสกุล";
+    if (!profileForm.birth_date) errs.birth_date = "กรุณากรอกวันเกิด";
+    if (!profileForm.tel_no.trim()) errs.tel_no = "กรุณากรอกเบอร์โทร";
+    if (!profileForm.email.trim()) errs.email = "กรุณากรอกอีเมล";
+    if (profileForm.nationality === "ไทย") {
+      if (!profileForm.id_card.trim()) {
+        errs.id_card = "กรุณากรอกเลขบัตรประชาชน";
+      } else if (!validateThaiId(profileForm.id_card.replace(/-/g, ""))) {
+        errs.id_card = "เลขบัตรประชาชนไม่ถูกต้อง";
+      }
+    } else {
+      if (!profileForm.passport_no.trim()) errs.passport_no = "กรุณากรอกเลขหนังสือเดินทาง";
+    }
+    if (profileForm.post_code && !/^\d{5}$/.test(profileForm.post_code)) {
+      errs.post_code = "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก";
+    }
+    setProfileErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    localStorage.setItem("bks_user_profile", JSON.stringify(profileForm));
+    if (user) {
+      const displayName = `${profileForm.title}${profileForm.first_name} ${profileForm.last_name}`.trim() || user.name;
+      const updated = { ...user, name: displayName, email: profileForm.email, phone: profileForm.tel_no };
+      localStorage.setItem("bks_user", JSON.stringify(updated));
+      setUser(updated);
+    }
+    setProfileEditing(false);
+    setProfileErrors({});
   };
 
   const handleLogout = () => {
@@ -407,48 +439,40 @@ export default function ProfilePage() {
   };
 
   const handleMemberSubmit = () => {
-    const errs: Record<string, string> = {};
-    if (!memberForm.first_name.trim()) errs.first_name = "กรุณากรอกชื่อ";
-    if (!memberForm.last_name.trim()) errs.last_name = "กรุณากรอกนามสกุล";
-    if (!memberForm.birth_date) errs.birth_date = "กรุณากรอกวันเกิด";
-    if (!memberForm.tel_no.trim()) errs.tel_no = "กรุณากรอกเบอร์โทร";
-    if (!memberForm.email.trim()) errs.email = "กรุณากรอกอีเมล";
-
-    if (memberForm.nationality === "ไทย") {
-      if (!memberForm.id_card.trim()) {
-        errs.id_card = "กรุณากรอกเลขบัตรประชาชน";
-      } else if (!validateThaiId(memberForm.id_card.replace(/-/g, ""))) {
-        errs.id_card = "เลขบัตรประชาชนไม่ถูกต้อง";
-      }
-    } else {
-      if (!memberForm.passport_no.trim()) errs.passport_no = "กรุณากรอกเลขหนังสือเดินทาง";
+    setMemberProfileIncomplete(false);
+    const profileRaw = localStorage.getItem("bks_user_profile");
+    const profile: UserProfile | null = profileRaw ? JSON.parse(profileRaw) : null;
+    const isComplete = profile &&
+      profile.first_name.trim() && profile.last_name.trim() && profile.birth_date &&
+      (profile.nationality === "ไทย" ? profile.id_card.trim() : profile.passport_no.trim());
+    if (!isComplete) {
+      setMemberProfileIncomplete(true);
+      return;
     }
-
-    if (memberForm.post_code && !/^\d{5}$/.test(memberForm.post_code)) {
-      errs.post_code = "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก";
-    }
-
-    setMemberErrors(errs);
-    if (Object.keys(errs).length > 0) return;
-
-    setMemberSubmitting(true);
     const app: MemberApplication = {
-      ...memberForm,
+      ...profile,
+      person_type_code: memberTypeCode,
       approval_status: "pending",
       submitted_at: new Date().toISOString().split("T")[0],
     };
     localStorage.setItem("bks_member_application", JSON.stringify(app));
     setMemberApp(app);
-    setMemberSubmitting(false);
+    setMemberFormOpen(false);
+    setDocFile(null);
   };
 
   if (!user) return null;
 
-  const inputCls = "w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82]";
-  const mInputCls = (field: string) =>
-    `w-full border rounded-lg px-3 py-2.5 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82] ${memberErrors[field] ? "border-[#f04438]" : "border-[#d0d5dd]"}`;
-  const mf = memberForm;
-  const setMf = (k: string, v: string) => setMemberForm(f => ({ ...f, [k]: v }));
+  const pInputCls = (field: string) =>
+    `w-full border rounded-lg px-3 py-2.5 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82] ${profileErrors[field] ? "border-[#f04438]" : "border-[#d0d5dd]"}`;
+  const pf = profileForm;
+  const setPf = (k: keyof UserProfile, v: string) => setProfileForm(f => ({ ...f, [k]: v }));
+  const pVal = (val: string, empty = "ยังไม่ได้กรอก") =>
+    val ? <span className="text-[15px] font-medium text-[#101828]">{val}</span>
+        : <span className="text-[15px] font-medium text-[#9ca3af]">{empty}</span>;
+
+  const currentPersonType = memberApp ? PERSON_TYPES.find(p => p.code === memberApp.person_type_code) : null;
+  const selectedPersonType = PERSON_TYPES.find(p => p.code === memberTypeCode);
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f3f4f6]">
@@ -458,7 +482,6 @@ export default function ProfilePage() {
 
         {/* Sidebar */}
         <aside className="w-[260px] shrink-0 flex flex-col gap-3">
-          {/* User card */}
           <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 flex flex-col items-center gap-3 text-center">
             <div className="w-16 h-16 rounded-full bg-[#171b82] flex items-center justify-center text-white text-[26px] font-semibold">
               {user.name.charAt(2)}
@@ -468,7 +491,9 @@ export default function ProfilePage() {
               <div className="text-[13px] text-[#667085] mt-0.5">@{user.username}</div>
             </div>
             <span className="bg-[#f0f2ff] text-[#171b82] text-[11px] font-semibold px-3 py-1 rounded-full">
-              สมาชิกทั่วไป
+              {memberApp?.approval_status === "approved" && currentPersonType
+                ? currentPersonType.name_th
+                : "สมาชิกทั่วไป"}
             </span>
             <div className="w-full border-t border-[#f3f4f6] pt-3 flex justify-center gap-6 text-center">
               <div>
@@ -483,7 +508,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Nav */}
           <nav className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
             {NAV_ITEMS.map((item, i) => (
               <button
@@ -491,14 +515,9 @@ export default function ProfilePage() {
                 onClick={() => setActive(item.id)}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 text-left text-[14px] font-medium transition-colors
                   ${i < NAV_ITEMS.length - 1 ? "border-b border-[#f3f4f6]" : ""}
-                  ${active === item.id
-                    ? "bg-[#f0f2ff] text-[#171b82]"
-                    : "text-[#344054] hover:bg-[#f9fafb]"
-                  }`}
+                  ${active === item.id ? "bg-[#f0f2ff] text-[#171b82]" : "text-[#344054] hover:bg-[#f9fafb]"}`}
               >
-                <span className={active === item.id ? "text-[#171b82]" : "text-[#9ca3af]"}>
-                  {item.icon}
-                </span>
+                <span className={active === item.id ? "text-[#171b82]" : "text-[#9ca3af]"}>{item.icon}</span>
                 {item.label}
                 {active === item.id && (
                   <svg className="ml-auto" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M9 18l6-6-6-6"/></svg>
@@ -507,7 +526,6 @@ export default function ProfilePage() {
             ))}
           </nav>
 
-          {/* Logout */}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-2.5 px-4 py-3 bg-white border border-[#e5e7eb] rounded-xl text-[14px] font-medium text-[#f04438] hover:bg-[#fff1f0] transition-colors"
@@ -520,42 +538,253 @@ export default function ProfilePage() {
         {/* Main content */}
         <main className="flex-1 min-w-0">
 
-          {/* Profile */}
+          {/* ── Profile ── */}
           {active === "profile" && (
-            <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-[#f3f4f6]">
-                <SectionHeader title="ข้อมูลส่วนตัว" subtitle="จัดการข้อมูลและรายละเอียดบัญชีของคุณ" />
-                {!editing ? (
-                  <button onClick={() => setEditing(true)} className="flex items-center gap-1.5 text-[13px] font-semibold text-[#171b82] hover:text-[#131566] shrink-0 self-start mt-1">
+            <div className="flex flex-col gap-5">
+              {/* Section header + edit toggle (controls both cards below) */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-[20px] font-semibold text-[#101828]">ข้อมูลส่วนตัว</h2>
+                  <p className="text-[14px] text-[#667085] mt-0.5">จัดการข้อมูลและรายละเอียดบัญชีของคุณ</p>
+                </div>
+                {!profileEditing ? (
+                  <button
+                    onClick={() => setProfileEditing(true)}
+                    className="flex items-center gap-1.5 text-[13px] font-semibold text-[#171b82] hover:text-[#131566] shrink-0"
+                  >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     แก้ไข
                   </button>
                 ) : (
-                  <div className="flex items-center gap-3 shrink-0 self-start mt-1">
-                    <button onClick={() => setEditing(false)} className="text-[13px] font-medium text-[#667085] hover:text-[#344054]">ยกเลิก</button>
-                    <button onClick={handleSave} className="text-[13px] font-semibold text-white bg-[#171b82] px-4 py-1.5 rounded-lg hover:bg-[#131566]">บันทึก</button>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <button onClick={() => { setProfileEditing(false); setProfileErrors({}); }} className="text-[13px] font-medium text-[#667085] hover:text-[#344054]">ยกเลิก</button>
+                    <button onClick={handleProfileSave} className="text-[13px] font-semibold text-white bg-[#171b82] px-4 py-1.5 rounded-lg hover:bg-[#131566]">บันทึก</button>
                   </div>
                 )}
               </div>
-              <div className="p-6 grid grid-cols-2 gap-6">
-                {[
-                  { label: "ชื่อ-นามสกุล", field: "name" as const, value: form.name },
-                  { label: "รหัสผู้ใช้งาน", field: null, value: user.username },
-                  { label: "อีเมล", field: "email" as const, value: form.email },
-                  { label: "เบอร์โทรศัพท์", field: "phone" as const, value: form.phone },
-                ].map(({ label, field, value }) => (
-                  <div key={label} className="flex flex-col gap-1.5">
-                    <label className="text-[12px] font-semibold text-[#667085] uppercase tracking-wider">{label}</label>
-                    {editing && field ? (
-                      <input value={value} onChange={e => setForm(p => ({ ...p, [field]: e.target.value }))} className={inputCls} />
-                    ) : (
-                      <div className={`text-[15px] font-medium ${!field ? "text-[#9ca3af]" : "text-[#101828]"}`}>{value}</div>
-                    )}
+
+              {/* Card 1: Personal info */}
+              <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                <div className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลส่วนตัว</div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      คำนำหน้า{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <select value={pf.title} onChange={e => setPf("title", e.target.value)} className={pInputCls("title")}>
+                        {["นาย", "นาง", "นางสาว", "เด็กชาย", "เด็กหญิง", "ร.ต.อ.", "พ.ต.ท.", "พ.ต.อ.", "นาวาอากาศเอก"].map(t => <option key={t}>{t}</option>)}
+                      </select>
+                    ) : pVal(pf.title, "—")}
                   </div>
-                ))}
+                  {/* Gender */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      เพศ{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <select value={pf.gender} onChange={e => setPf("gender", e.target.value)} className={pInputCls("gender")}>
+                        <option value="male">ชาย</option>
+                        <option value="female">หญิง</option>
+                        <option value="other">อื่น ๆ</option>
+                      </select>
+                    ) : pVal(pf.gender === "male" ? "ชาย" : pf.gender === "female" ? "หญิง" : pf.gender === "other" ? "อื่น ๆ" : "", "—")}
+                  </div>
+                  {/* First name */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      ชื่อ{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <>
+                        <input value={pf.first_name} onChange={e => setPf("first_name", e.target.value)} className={pInputCls("first_name")} placeholder="ชื่อจริง" />
+                        {profileErrors.first_name && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.first_name}</p>}
+                      </>
+                    ) : pVal(pf.first_name)}
+                  </div>
+                  {/* Last name */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      นามสกุล{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <>
+                        <input value={pf.last_name} onChange={e => setPf("last_name", e.target.value)} className={pInputCls("last_name")} placeholder="นามสกุล" />
+                        {profileErrors.last_name && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.last_name}</p>}
+                      </>
+                    ) : pVal(pf.last_name)}
+                  </div>
+                  {/* Birth date */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      วันเกิด{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <>
+                        <input type="date" value={pf.birth_date} onChange={e => setPf("birth_date", e.target.value)} className={pInputCls("birth_date")} />
+                        {profileErrors.birth_date && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.birth_date}</p>}
+                      </>
+                    ) : pVal(pf.birth_date ? memberIsoToThai(pf.birth_date) : "")}
+                  </div>
+                  {/* Nationality */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      สัญชาติ{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <select
+                        value={pf.nationality}
+                        onChange={e => { setPf("nationality", e.target.value); setPf("id_card", ""); setPf("passport_no", ""); }}
+                        className={pInputCls("nationality")}
+                      >
+                        {["ไทย", "อเมริกัน", "อังกฤษ", "ญี่ปุ่น", "จีน", "เกาหลี", "อื่น ๆ"].map(n => <option key={n}>{n}</option>)}
+                      </select>
+                    ) : pVal(pf.nationality, "—")}
+                  </div>
+                  {/* ID card or Passport */}
+                  {pf.nationality === "ไทย" ? (
+                    <div className="col-span-2">
+                      <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                        เลขบัตรประชาชน{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                      </label>
+                      {profileEditing ? (
+                        <>
+                          <input
+                            value={pf.id_card}
+                            onChange={e => setPf("id_card", e.target.value.replace(/\D/g, "").slice(0, 13))}
+                            className={pInputCls("id_card")}
+                            placeholder="13 หลัก"
+                            maxLength={13}
+                            inputMode="numeric"
+                          />
+                          {profileErrors.id_card && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.id_card}</p>}
+                        </>
+                      ) : pVal(pf.id_card ? pf.id_card.replace(/(\d{1})(\d{4})(\d{5})(\d{2})(\d{1})/, "$1-$2-$3-$4-$5") : "")}
+                    </div>
+                  ) : (
+                    <div className="col-span-2">
+                      <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                        เลขหนังสือเดินทาง{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                      </label>
+                      {profileEditing ? (
+                        <>
+                          <input value={pf.passport_no} onChange={e => setPf("passport_no", e.target.value)} className={pInputCls("passport_no")} placeholder="Passport Number" />
+                          {profileErrors.passport_no && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.passport_no}</p>}
+                        </>
+                      ) : pVal(pf.passport_no)}
+                    </div>
+                  )}
+                  {/* Username — always read-only */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">รหัสผู้ใช้งาน</label>
+                    <div className="text-[15px] font-medium text-[#9ca3af]">{user.username}</div>
+                  </div>
+                </div>
               </div>
-              <div className="border-t border-[#f3f4f6] px-6 py-4">
-                <div className="text-[13px] font-semibold text-[#344054] mb-3">ความปลอดภัย</div>
+
+              {/* Card 2: Contact info */}
+              <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                <div className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลติดต่อ</div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Tel */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      เบอร์โทรศัพท์{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <>
+                        <input value={pf.tel_no} onChange={e => setPf("tel_no", e.target.value)} className={pInputCls("tel_no")} placeholder="0XX-XXX-XXXX" />
+                        {profileErrors.tel_no && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.tel_no}</p>}
+                      </>
+                    ) : pVal(pf.tel_no)}
+                  </div>
+                  {/* Email */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">
+                      อีเมล{profileEditing && <span className="text-[#f04438] ml-0.5">*</span>}
+                    </label>
+                    {profileEditing ? (
+                      <>
+                        <input type="email" value={pf.email} onChange={e => setPf("email", e.target.value)} className={pInputCls("email")} placeholder="email@example.com" />
+                        {profileErrors.email && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.email}</p>}
+                      </>
+                    ) : pVal(pf.email)}
+                  </div>
+                  {/* Address */}
+                  <div className="col-span-2">
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">ที่อยู่</label>
+                    {profileEditing ? (
+                      <input value={pf.address} onChange={e => setPf("address", e.target.value)} className={pInputCls("address")} placeholder="บ้านเลขที่ ซอย ถนน" />
+                    ) : pVal(pf.address)}
+                  </div>
+                  {/* Province */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">จังหวัด</label>
+                    {profileEditing ? (
+                      <select
+                        value={pf.province}
+                        onChange={e => { setPf("province", e.target.value); setPf("district", ""); setPf("sub_district", ""); setPf("post_code", ""); }}
+                        className={pInputCls("province")}
+                      >
+                        <option value="">-- เลือกจังหวัด --</option>
+                        {THAI_PROVINCES.map(p => <option key={p.name}>{p.name}</option>)}
+                      </select>
+                    ) : pVal(pf.province)}
+                  </div>
+                  {/* District */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">เขต/อำเภอ</label>
+                    {profileEditing ? (
+                      <select
+                        value={pf.district}
+                        onChange={e => { setPf("district", e.target.value); setPf("sub_district", ""); setPf("post_code", ""); }}
+                        disabled={!pf.province}
+                        className={pInputCls("district") + " disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"}
+                      >
+                        <option value="">-- เลือกเขต/อำเภอ --</option>
+                        {getDistricts(pf.province).map(d => <option key={d.name}>{d.name}</option>)}
+                      </select>
+                    ) : pVal(pf.district)}
+                  </div>
+                  {/* Sub-district */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">แขวง/ตำบล</label>
+                    {profileEditing ? (
+                      <select
+                        value={pf.sub_district}
+                        onChange={e => { setPf("sub_district", e.target.value); setPf("post_code", getPostCode(pf.province, pf.district, e.target.value)); }}
+                        disabled={!pf.district}
+                        className={pInputCls("sub_district") + " disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"}
+                      >
+                        <option value="">-- เลือกแขวง/ตำบล --</option>
+                        {getSubDistricts(pf.province, pf.district).map(s => <option key={s.name}>{s.name}</option>)}
+                      </select>
+                    ) : pVal(pf.sub_district)}
+                  </div>
+                  {/* Post code */}
+                  <div>
+                    <label className="block text-[12px] font-semibold text-[#667085] uppercase tracking-wider mb-1.5">รหัสไปรษณีย์</label>
+                    {profileEditing ? (
+                      <>
+                        <input
+                          value={pf.post_code}
+                          onChange={e => setPf("post_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
+                          className={pInputCls("post_code")}
+                          placeholder="xxxxx"
+                          maxLength={5}
+                          inputMode="numeric"
+                        />
+                        {profileErrors.post_code && <p className="text-[12px] text-[#f04438] mt-1">{profileErrors.post_code}</p>}
+                      </>
+                    ) : pVal(pf.post_code)}
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 3: Security */}
+              <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                <div className="text-[14px] font-semibold text-[#344054] mb-3">ความปลอดภัย</div>
                 <div className="flex flex-col gap-2">
                   {[
                     { label: "เปลี่ยนรหัสผ่าน", desc: "อัปเดตรหัสผ่านของคุณ" },
@@ -571,16 +800,174 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
+
+              {/* Card 4: Member type — status display + inline application form */}
+              <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
+                <div className="px-6 py-4 border-b border-[#f3f4f6] flex items-center justify-between">
+                  <div className="text-[15px] font-semibold text-[#101828]">ประเภทสมาชิก</div>
+                  {!memberFormOpen && memberApp?.approval_status === "approved" && (
+                    <button
+                      onClick={() => setMemberFormOpen(true)}
+                      className="text-[13px] font-medium text-[#667085] border border-[#d0d5dd] px-3 py-1.5 rounded-lg hover:bg-[#f9fafb] transition-colors"
+                    >
+                      เปลี่ยนประเภท
+                    </button>
+                  )}
+                  {memberFormOpen && (
+                    <button
+                      onClick={() => { setMemberFormOpen(false); setMemberProfileIncomplete(false); setDocFile(null); }}
+                      className="text-[13px] font-medium text-[#667085] hover:text-[#344054]"
+                    >
+                      ยกเลิก
+                    </button>
+                  )}
+                </div>
+                <div className="p-6">
+                  {/* Status display — hidden when form is open */}
+                  {!memberFormOpen && (
+                    <>
+                      {(!memberApp || memberApp.approval_status === "rejected" || memberApp.approval_status === "expired") && (
+                        <div className="flex items-center justify-between gap-4">
+                          <div>
+                            <span className={`inline-block text-[12px] font-semibold px-2.5 py-1 rounded-full mb-2 ${
+                              memberApp?.approval_status === "rejected" ? "bg-[#fee2e2] text-[#dc2626]"
+                              : memberApp?.approval_status === "expired" ? "bg-[#f3f4f6] text-[#9ca3af]"
+                              : "bg-[#f0f2ff] text-[#171b82]"
+                            }`}>
+                              {memberApp?.approval_status === "rejected" ? "ไม่อนุมัติ"
+                               : memberApp?.approval_status === "expired" ? "หมดอายุ"
+                               : "สมาชิกทั่วไป"}
+                            </span>
+                            <p className="text-[13px] text-[#667085]">สมัครสมาชิกสิทธิพิเศษเพื่อรับส่วนลดและสิทธิพิเศษจาก บขส.</p>
+                          </div>
+                          <button
+                            onClick={() => setMemberFormOpen(true)}
+                            className="text-[13px] font-semibold text-white bg-[#171b82] px-4 py-2 rounded-lg hover:bg-[#131566] shrink-0 transition-colors"
+                          >
+                            สมัครสมาชิก
+                          </button>
+                        </div>
+                      )}
+                      {memberApp?.approval_status === "pending" && (
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[#fef9c3] flex items-center justify-center shrink-0">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                              <span className="bg-[#fef9c3] text-[#b45309] text-[12px] font-semibold px-2 py-0.5 rounded-full">รอตรวจสอบ</span>
+                              <span className="text-[14px] font-semibold text-[#101828]">{currentPersonType?.name_th}</span>
+                            </div>
+                            <div className="text-[13px] text-[#667085]">ยื่นเมื่อ {memberIsoToThai(memberApp.submitted_at)}</div>
+                          </div>
+                        </div>
+                      )}
+                      {memberApp?.approval_status === "approved" && currentPersonType && (
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-[#d1fae5] flex items-center justify-center shrink-0">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                              <span className="bg-[#d1fae5] text-[#059669] text-[12px] font-semibold px-2 py-0.5 rounded-full">อนุมัติแล้ว</span>
+                              <span className="text-[14px] font-semibold text-[#101828]">{currentPersonType.name_th}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-[13px] text-[#667085] flex-wrap">
+                              {currentPersonType.default_discount > 0 && (
+                                <span className="text-[#059669] font-medium">ส่วนลด {currentPersonType.default_discount}%</span>
+                              )}
+                              {memberApp.member_no && (
+                                <span>เลขสมาชิก: <span className="font-mono font-semibold text-[#101828]">{memberApp.member_no}</span></span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  {/* Inline application form */}
+                  {memberFormOpen && (
+                    <form onSubmit={e => { e.preventDefault(); handleMemberSubmit(); }} className="flex flex-col gap-4">
+                      {memberProfileIncomplete && (
+                        <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl bg-[#fff7ed] border border-[#fed7aa]">
+                          <svg className="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c2410c" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[14px] font-semibold text-[#c2410c]">กรุณากรอกข้อมูลส่วนตัวให้ครบก่อนสมัครสมาชิก</div>
+                            <div className="text-[13px] text-[#9ca3af] mt-0.5">ต้องการ: ชื่อ-นามสกุล, วันเกิด และเลขบัตรประชาชน / หนังสือเดินทาง</div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => { setMemberFormOpen(false); setProfileEditing(true); setMemberProfileIncomplete(false); }}
+                            className="text-[13px] font-semibold text-[#c2410c] hover:underline shrink-0"
+                          >
+                            ไปกรอกข้อมูล
+                          </button>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        {PERSON_TYPES.map(pt => (
+                          <button
+                            key={pt.code}
+                            type="button"
+                            onClick={() => { setMemberTypeCode(pt.code); if (!pt.requires_document) setDocFile(null); }}
+                            className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
+                              memberTypeCode === pt.code ? "border-[#171b82] bg-[#f0f2ff]" : "border-[#e5e7eb] hover:border-[#d0d5dd]"
+                            }`}
+                          >
+                            <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${memberTypeCode === pt.code ? "border-[#171b82]" : "border-[#d0d5dd]"}`}>
+                              {memberTypeCode === pt.code && <div className="w-2.5 h-2.5 rounded-full bg-[#171b82]" />}
+                            </div>
+                            <div>
+                              <div className="text-[14px] font-semibold text-[#101828]">{pt.name_th}</div>
+                              {pt.default_discount > 0 && <div className="text-[12px] text-[#059669] font-medium mt-0.5">ส่วนลด {pt.default_discount}%</div>}
+                              {pt.doc_label && <div className="text-[12px] text-[#9ca3af] mt-0.5">เอกสาร: {pt.doc_label}</div>}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      {selectedPersonType?.requires_document && (
+                        <div>
+                          <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">
+                            อัปโหลดเอกสาร ({selectedPersonType.doc_label})
+                          </label>
+                          <label
+                            htmlFor="doc-upload"
+                            className="flex flex-col items-center justify-center gap-2 border-2 border-dashed border-[#d0d5dd] rounded-xl p-6 cursor-pointer hover:border-[#171b82] hover:bg-[#f0f2ff] transition-colors"
+                          >
+                            {docFile ? (
+                              <div className="flex items-center gap-2 text-[14px] font-medium text-[#101828]">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                {docFile.name}
+                              </div>
+                            ) : (
+                              <>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <div className="text-[14px] text-[#667085]">คลิกเพื่ออัปโหลดไฟล์</div>
+                                <div className="text-[12px] text-[#9ca3af]">รองรับ JPG, PNG, PDF (ขนาดไม่เกิน 5MB)</div>
+                              </>
+                            )}
+                          </label>
+                          <input id="doc-upload" type="file" accept="image/*,.pdf" className="hidden" onChange={e => setDocFile(e.target.files?.[0] ?? null)} />
+                        </div>
+                      )}
+                      <button
+                        type="submit"
+                        className="bg-[#171b82] text-white text-[15px] font-semibold py-3 rounded-xl hover:bg-[#0f1260] transition-colors"
+                      >
+                        ส่งคำขอสมัครสมาชิก
+                      </button>
+                    </form>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* My Booking */}
+          {/* ── My Booking ── */}
           {active === "my-booking" && (() => {
             const realEntry = draftBooking ? draftToUpcoming(draftBooking) : null;
-            const allUpcoming = [
-              ...(realEntry ? [realEntry] : []),
-              ...MOCK_UPCOMING,
-            ];
+            const allUpcoming = [...(realEntry ? [realEntry] : []), ...MOCK_UPCOMING];
             return (
               <div>
                 <SectionHeader title="การจองของฉัน" subtitle="ตั๋วที่กำลังจะเดินทาง" />
@@ -595,12 +982,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="flex flex-col gap-4">
                     {allUpcoming.map(b => (
-                      <BookingCard
-                        key={b.id}
-                        booking={b}
-                        showCancel
-                        onViewTicket={() => setTicketModal(b)}
-                      />
+                      <BookingCard key={b.id} booking={b} showCancel onViewTicket={() => setTicketModal(b)} />
                     ))}
                     <Link href="/" className="self-start flex items-center gap-2 bg-[#171b82] text-white text-[13px] font-semibold px-5 py-2.5 rounded-lg hover:bg-[#131566]">
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -612,7 +994,7 @@ export default function ProfilePage() {
             );
           })()}
 
-          {/* Booking History */}
+          {/* ── Booking History ── */}
           {active === "booking-history" && (
             <div>
               <SectionHeader title="ประวัติการจอง" subtitle="รายการตั๋วที่เดินทางแล้วทั้งหมด" />
@@ -622,7 +1004,7 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Passengers */}
+          {/* ── Passengers ── */}
           {active === "passengers" && (
             <div>
               <div className="flex items-start justify-between mb-6">
@@ -660,11 +1042,10 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Points */}
+          {/* ── Points ── */}
           {active === "points" && (
             <div>
               <SectionHeader title="แต้มสะสม" subtitle="สะสมแต้มทุกครั้งที่จองตั๋ว เพื่อรับสิทธิพิเศษ" />
-              {/* Balance card */}
               <div className="bg-gradient-to-br from-[#171b82] to-[#2d3491] rounded-2xl p-6 mb-6 flex items-center justify-between">
                 <div>
                   <div className="text-white/70 text-[13px] font-medium mb-1">แต้มสะสมคงเหลือ</div>
@@ -676,7 +1057,6 @@ export default function ProfilePage() {
                   <div className="bg-white/15 text-white text-[12px] font-medium px-3 py-1.5 rounded-full">100 แต้ม = 10 ฿</div>
                 </div>
               </div>
-              {/* History */}
               <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
                 <div className="px-5 py-3.5 border-b border-[#f3f4f6]">
                   <span className="text-[14px] font-semibold text-[#101828]">ประวัติแต้ม</span>
@@ -706,23 +1086,20 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Coupons */}
+          {/* ── Coupons ── */}
           {active === "coupons" && (
             <div>
               <SectionHeader title="คูปองของฉัน" subtitle="คูปองและโปรโมชั่นที่ใช้ได้" />
               <div className="flex flex-col gap-4">
                 {MOCK_COUPONS.map(c => (
                   <div key={c.code} className={`bg-white border rounded-xl overflow-hidden flex ${c.used ? "opacity-50" : ""}`}>
-                    {/* Left color strip + discount */}
                     <div className={`w-[100px] shrink-0 flex flex-col items-center justify-center px-3 py-5 ${c.used ? "bg-[#f3f4f6]" : "bg-[#171b82]"}`}>
                       <div className={`text-[22px] font-semibold ${c.used ? "text-[#9ca3af]" : "text-white"}`}>{c.discount}</div>
                       <div className={`text-[11px] font-medium mt-0.5 ${c.used ? "text-[#9ca3af]" : "text-white/70"}`}>ส่วนลด</div>
                     </div>
-                    {/* Tear line */}
                     <div className="flex flex-col justify-between py-3">
                       {[...Array(6)].map((_, i) => <div key={i} className="w-px h-2 bg-[#e5e7eb]" />)}
                     </div>
-                    {/* Details */}
                     <div className="flex-1 px-5 py-4 flex items-center justify-between gap-4">
                       <div>
                         <div className="text-[15px] font-semibold text-[#101828]">{c.desc}</div>
@@ -740,253 +1117,6 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Membership */}
-          {active === "membership" && (
-            <div className="flex flex-col gap-5">
-              <SectionHeader title="สมาชิกสิทธิพิเศษ บขส." subtitle="สมัครสมาชิกเพื่อรับส่วนลดและสิทธิพิเศษ" />
-
-              {/* Status banner if submitted */}
-              {memberApp && (
-                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${APPROVAL_STATUS_COLORS[memberApp.approval_status].replace("bg-", "bg-").replace("text-", "border-")} bg-opacity-50`}
-                  style={{ backgroundColor: memberApp.approval_status === "approved" ? "#f0fdf4" : memberApp.approval_status === "pending" ? "#fefce8" : "#fff1f0", borderColor: memberApp.approval_status === "approved" ? "#86efac" : memberApp.approval_status === "pending" ? "#fcd34d" : "#fca5a5" }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={APPROVAL_STATUS_COLORS[memberApp.approval_status].split(" ")[1]}>
-                    {memberApp.approval_status === "approved" ? <polyline points="20 6 9 17 4 12"/> : <circle cx="12" cy="12" r="10"/>}
-                  </svg>
-                  <div>
-                    <div className={`text-[15px] font-semibold ${APPROVAL_STATUS_COLORS[memberApp.approval_status].split(" ")[1]}`}>
-                      {memberApp.approval_status === "approved" ? `ได้รับการอนุมัติแล้ว${memberApp.member_no ? ` · เลขสมาชิก ${memberApp.member_no}` : ""}` :
-                       memberApp.approval_status === "pending" ? "คำขออยู่ระหว่างการพิจารณา" :
-                       memberApp.approval_status === "rejected" ? "คำขอไม่ผ่านการอนุมัติ" : "สิทธิ์หมดอายุแล้ว"}
-                    </div>
-                    <div className="text-[13px] text-[#667085]">ยื่นเมื่อ {memberIsoToThai(memberApp.submitted_at)}</div>
-                  </div>
-                  {(memberApp.approval_status === "rejected" || memberApp.approval_status === "expired") && (
-                    <button
-                      onClick={() => { setMemberApp(null); localStorage.removeItem("bks_member_application"); }}
-                      className="ml-auto text-[13px] font-semibold text-[#171b82] hover:underline"
-                    >
-                      ยื่นใหม่
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Registration form */}
-              {(!memberApp || memberApp.approval_status === "rejected" || memberApp.approval_status === "expired") && !memberApp && (
-                <form onSubmit={e => { e.preventDefault(); handleMemberSubmit(); }} className="flex flex-col gap-5">
-                  {/* Personal info */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
-                    <div className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลส่วนตัว</div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Title */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">คำนำหน้า <span className="text-[#f04438]">*</span></label>
-                        <select value={mf.title} onChange={e => setMf("title", e.target.value)} className={mInputCls("title")}>
-                          {["นาย", "นาง", "นางสาว", "เด็กชาย", "เด็กหญิง", "ร.ต.อ.", "พ.ต.ท.", "พ.ต.อ.", "นาวาอากาศเอก"].map(t => <option key={t}>{t}</option>)}
-                        </select>
-                      </div>
-                      {/* Gender */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เพศ <span className="text-[#f04438]">*</span></label>
-                        <select value={mf.gender} onChange={e => setMf("gender", e.target.value)} className={mInputCls("gender")}>
-                          <option value="male">ชาย</option>
-                          <option value="female">หญิง</option>
-                          <option value="other">อื่น ๆ</option>
-                        </select>
-                      </div>
-                      {/* First name */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">ชื่อ <span className="text-[#f04438]">*</span></label>
-                        <input value={mf.first_name} onChange={e => setMf("first_name", e.target.value)} className={mInputCls("first_name")} placeholder="ชื่อจริง" />
-                        {memberErrors.first_name && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.first_name}</p>}
-                      </div>
-                      {/* Last name */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">นามสกุล <span className="text-[#f04438]">*</span></label>
-                        <input value={mf.last_name} onChange={e => setMf("last_name", e.target.value)} className={mInputCls("last_name")} placeholder="นามสกุล" />
-                        {memberErrors.last_name && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.last_name}</p>}
-                      </div>
-                      {/* Birth date */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">วันเกิด <span className="text-[#f04438]">*</span></label>
-                        <input type="date" value={mf.birth_date} onChange={e => setMf("birth_date", e.target.value)} className={mInputCls("birth_date")} />
-                        {memberErrors.birth_date && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.birth_date}</p>}
-                      </div>
-                      {/* Nationality */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">สัญชาติ <span className="text-[#f04438]">*</span></label>
-                        <select value={mf.nationality} onChange={e => { setMf("nationality", e.target.value); setMf("id_card", ""); setMf("passport_no", ""); }} className={mInputCls("nationality")}>
-                          <option>ไทย</option>
-                          <option>อเมริกัน</option>
-                          <option>อังกฤษ</option>
-                          <option>ญี่ปุ่น</option>
-                          <option>จีน</option>
-                          <option>เกาหลี</option>
-                          <option>อื่น ๆ</option>
-                        </select>
-                      </div>
-                      {/* ID card (Thai) or passport (non-Thai) */}
-                      {mf.nationality === "ไทย" ? (
-                        <div className="col-span-2">
-                          <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เลขบัตรประชาชน <span className="text-[#f04438]">*</span></label>
-                          <input value={mf.id_card} onChange={e => setMf("id_card", e.target.value.replace(/\D/g, "").slice(0, 13))} className={mInputCls("id_card")} placeholder="13 หลัก" maxLength={13} inputMode="numeric" />
-                          {memberErrors.id_card && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.id_card}</p>}
-                        </div>
-                      ) : (
-                        <div className="col-span-2">
-                          <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เลขหนังสือเดินทาง <span className="text-[#f04438]">*</span></label>
-                          <input value={mf.passport_no} onChange={e => setMf("passport_no", e.target.value)} className={mInputCls("passport_no")} placeholder="Passport Number" />
-                          {memberErrors.passport_no && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.passport_no}</p>}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Contact */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
-                    <div className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลติดต่อ</div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เบอร์โทรศัพท์ <span className="text-[#f04438]">*</span></label>
-                        <input value={mf.tel_no} onChange={e => setMf("tel_no", e.target.value)} className={mInputCls("tel_no")} placeholder="0XX-XXX-XXXX" />
-                        {memberErrors.tel_no && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.tel_no}</p>}
-                      </div>
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">อีเมล <span className="text-[#f04438]">*</span></label>
-                        <input type="email" value={mf.email} onChange={e => setMf("email", e.target.value)} className={mInputCls("email")} placeholder="email@example.com" />
-                        {memberErrors.email && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.email}</p>}
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">ที่อยู่</label>
-                        <input value={mf.address} onChange={e => setMf("address", e.target.value)} className={mInputCls("address")} placeholder="บ้านเลขที่ ซอย ถนน" />
-                      </div>
-                      {/* Province → District → Sub-district cascade */}
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">จังหวัด</label>
-                        <select
-                          value={mf.province}
-                          onChange={e => { setMf("province", e.target.value); setMf("district", ""); setMf("sub_district", ""); setMf("post_code", ""); }}
-                          className={mInputCls("province")}
-                        >
-                          <option value="">-- เลือกจังหวัด --</option>
-                          {THAI_PROVINCES.map(p => <option key={p.name}>{p.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เขต/อำเภอ</label>
-                        <select
-                          value={mf.district}
-                          onChange={e => { setMf("district", e.target.value); setMf("sub_district", ""); setMf("post_code", ""); }}
-                          disabled={!mf.province}
-                          className={mInputCls("district") + " disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"}
-                        >
-                          <option value="">-- เลือกเขต/อำเภอ --</option>
-                          {getDistricts(mf.province).map(d => <option key={d.name}>{d.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">แขวง/ตำบล</label>
-                        <select
-                          value={mf.sub_district}
-                          onChange={e => {
-                            setMf("sub_district", e.target.value);
-                            setMf("post_code", getPostCode(mf.province, mf.district, e.target.value));
-                          }}
-                          disabled={!mf.district}
-                          className={mInputCls("sub_district") + " disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"}
-                        >
-                          <option value="">-- เลือกแขวง/ตำบล --</option>
-                          {getSubDistricts(mf.province, mf.district).map(s => <option key={s.name}>{s.name}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">รหัสไปรษณีย์</label>
-                        <input
-                          value={mf.post_code}
-                          onChange={e => setMf("post_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
-                          className={mInputCls("post_code")}
-                          placeholder="xxxxx"
-                          maxLength={5}
-                          inputMode="numeric"
-                        />
-                        {memberErrors.post_code && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.post_code}</p>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Membership type */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
-                    <div className="text-[15px] font-semibold text-[#101828] mb-4">ประเภทสมาชิก</div>
-                    <div className="grid grid-cols-2 gap-3">
-                      {PERSON_TYPES.map(pt => (
-                        <button
-                          key={pt.code}
-                          type="button"
-                          onClick={() => setMf("person_type_code", pt.code)}
-                          className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
-                            mf.person_type_code === pt.code
-                              ? "border-[#171b82] bg-[#f0f2ff]"
-                              : "border-[#e5e7eb] hover:border-[#d0d5dd]"
-                          }`}
-                        >
-                          <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${mf.person_type_code === pt.code ? "border-[#171b82]" : "border-[#d0d5dd]"}`}>
-                            {mf.person_type_code === pt.code && <div className="w-2.5 h-2.5 rounded-full bg-[#171b82]" />}
-                          </div>
-                          <div>
-                            <div className="text-[14px] font-semibold text-[#101828]">{pt.name_th}</div>
-                            {pt.default_discount > 0 && <div className="text-[12px] text-[#059669] font-medium mt-0.5">ส่วนลด {pt.default_discount}%</div>}
-                            {pt.doc_label && <div className="text-[12px] text-[#9ca3af] mt-0.5">เอกสาร: {pt.doc_label}</div>}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                    {PERSON_TYPES.find(p => p.code === mf.person_type_code)?.requires_document && (
-                      <div className="mt-4 flex items-center gap-3 bg-[#f0f2ff] border border-[#c7d2fe] rounded-xl px-4 py-3">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#171b82" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                        <span className="text-[13px] text-[#171b82] font-medium">
-                          ประเภทนี้ต้องใช้เอกสาร: {PERSON_TYPES.find(p => p.code === mf.person_type_code)?.doc_label} เพื่อประกอบการพิจารณา
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={memberSubmitting}
-                    className="bg-[#171b82] text-white text-[16px] font-semibold py-3.5 rounded-xl hover:bg-[#0f1260] transition-colors disabled:opacity-60"
-                  >
-                    ส่งคำขอสมัครสมาชิก
-                  </button>
-                </form>
-              )}
-
-              {/* Read-only view after submission (pending) */}
-              {memberApp && memberApp.approval_status === "pending" && (
-                <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4">
-                  <div className="text-[15px] font-semibold text-[#101828]">ข้อมูลที่ยื่นไว้</div>
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[14px]">
-                    {[
-                      ["ชื่อ-นามสกุล", `${memberApp.title}${memberApp.first_name} ${memberApp.last_name}`],
-                      ["เพศ", memberApp.gender === "male" ? "ชาย" : memberApp.gender === "female" ? "หญิง" : "อื่น ๆ"],
-                      ["วันเกิด", memberApp.birth_date ? memberIsoToThai(memberApp.birth_date) : "—"],
-                      ["สัญชาติ", memberApp.nationality],
-                      ["บัตรประชาชน/Passport", memberApp.id_card || memberApp.passport_no || "—"],
-                      ["เบอร์โทร", memberApp.tel_no],
-                      ["อีเมล", memberApp.email],
-                      ["จังหวัด", memberApp.province || "—"],
-                      ["ประเภทสมาชิก", PERSON_TYPES.find(p => p.code === memberApp.person_type_code)?.name_th ?? memberApp.person_type_code],
-                    ].map(([label, value]) => (
-                      <div key={label}>
-                        <div className="text-[12px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">{label}</div>
-                        <div className="text-[#344054] font-medium">{value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
