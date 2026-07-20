@@ -11,13 +11,13 @@ import {
   type Member,
 } from "@/lib/mockMembers";
 
-function DocCell({ memberType, documentLabel }: { memberType: Member["memberType"]; documentLabel?: string }) {
-  if (!MEMBER_TYPE_NEEDS_DOC[memberType]) {
+function DocCell({ personTypeCode, documentLabel }: { personTypeCode: string; documentLabel?: string }) {
+  if (!MEMBER_TYPE_NEEDS_DOC[personTypeCode]) {
     return <span className="text-[#9ca3af]">—</span>;
   }
   return (
     <span className="text-[13px] text-[#667085] font-medium">
-      {documentLabel ?? MEMBER_TYPE_DOC_LABEL[memberType]}
+      {documentLabel ?? MEMBER_TYPE_DOC_LABEL[personTypeCode]}
     </span>
   );
 }
@@ -37,7 +37,7 @@ export default function PendingMembersPage() {
   });
 
   const pending = members
-    .filter(m => m.status === "pending")
+    .filter(m => m.approval_status === "pending")
     .sort((a, b) => a.submittedAt.localeCompare(b.submittedAt));
 
   return (
@@ -64,7 +64,7 @@ export default function PendingMembersPage() {
           <table className="w-full text-[15px]">
             <thead>
               <tr className="border-b border-[#f3f4f6]">
-                {["#", "ชื่อ-นามสกุล", "ประเภทสมาชิก", "วันที่ยื่น", "เอกสารที่ต้องการ", ""].map(h => (
+                {["#", "ชื่อ-นามสกุล", "เบอร์โทร/อีเมล", "ประเภทสมาชิก", "วันที่ยื่น", "เอกสารที่ต้องการ", ""].map(h => (
                   <th key={h} className="text-left px-5 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">
                     {h}
                   </th>
@@ -85,18 +85,22 @@ export default function PendingMembersPage() {
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="font-semibold text-[#101828]">{m.name}</div>
+                    <div className="text-[13px] text-[#9ca3af] mt-0.5 font-mono">{m.id}</div>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="text-[14px] text-[#344054]">{m.tel_no}</div>
                     <div className="text-[13px] text-[#9ca3af] mt-0.5">{m.email}</div>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.memberType]}`}>
-                      {MEMBER_TYPE_LABELS[m.memberType]}
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.person_type_code]}`}>
+                      {MEMBER_TYPE_LABELS[m.person_type_code]}
                     </span>
                   </td>
                   <td className="px-5 py-3.5 text-[#667085] whitespace-nowrap">
-                    {isoToThai(m.submittedAt)}
+                    {isoToThai(m.register_date)}
                   </td>
                   <td className="px-5 py-3.5">
-                    <DocCell memberType={m.memberType} documentLabel={m.documentLabel} />
+                    <DocCell personTypeCode={m.person_type_code} documentLabel={m.document_label} />
                   </td>
                   <td className="px-5 py-3.5">
                     <button

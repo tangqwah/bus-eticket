@@ -122,8 +122,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     const overrides: Record<string, Partial<Member>> = overridesRaw ? JSON.parse(overridesRaw) : {};
     const count = MOCK_MEMBERS.filter(m => {
       const ov = overrides[m.id];
-      const status = ov?.status ?? m.status;
-      return status === "pending";
+      const approval_status = ov?.approval_status ?? m.approval_status;
+      return approval_status === "pending";
     }).length;
     setPendingCount(count);
   }, []);

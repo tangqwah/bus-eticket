@@ -4,10 +4,34 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { readDraft, thaiDateLong, cityOf, stationOf, paxFullName, type BookingDraft } from "@/lib/bookingStore";
+import { PERSON_TYPES, APPROVAL_STATUS_LABELS, APPROVAL_STATUS_COLORS, isoToThai as memberIsoToThai, validateThaiId, type ApprovalStatus } from "@/lib/mockMembers";
+import { THAI_PROVINCES, getDistricts, getSubDistricts, getPostCode } from "@/lib/thaiAddress";
 
 type User = { username: string; name: string; email: string; phone: string };
 
-type Section = "profile" | "my-booking" | "booking-history" | "passengers" | "points" | "coupons";
+type Section = "profile" | "my-booking" | "booking-history" | "passengers" | "points" | "coupons" | "membership";
+
+type MemberApplication = {
+  title: string;
+  first_name: string;
+  last_name: string;
+  gender: string;
+  birth_date: string;
+  nationality: string;
+  id_card: string;
+  passport_no: string;
+  tel_no: string;
+  email: string;
+  address: string;
+  sub_district: string;
+  district: string;
+  province: string;
+  post_code: string;
+  person_type_code: string;
+  approval_status: ApprovalStatus;
+  member_no?: string;
+  submitted_at: string;
+};
 
 const MOCK_UPCOMING = [
   {
@@ -103,6 +127,11 @@ const NAV_ITEMS: { id: Section; label: string; icon: React.ReactNode }[] = [
     id: "coupons",
     label: "คูปองของฉัน",
     icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>,
+  },
+  {
+    id: "membership",
+    label: "สมาชิกสิทธิพิเศษ",
+    icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>,
   },
 ];
 
@@ -324,6 +353,17 @@ export default function ProfilePage() {
   const [ticketModal, setTicketModal] = useState<UpcomingBooking | null>(null);
   const [draftBooking, setDraftBooking] = useState<BookingDraft | null>(null);
 
+  // Membership application
+  const [memberApp, setMemberApp] = useState<MemberApplication | null>(null);
+  const [memberForm, setMemberForm] = useState({
+    title: "นาย", first_name: "", last_name: "", gender: "male",
+    birth_date: "", nationality: "ไทย", id_card: "", passport_no: "",
+    tel_no: "", email: "", address: "", sub_district: "", district: "",
+    province: "", post_code: "", person_type_code: "general",
+  });
+  const [memberErrors, setMemberErrors] = useState<Record<string, string>>({});
+  const [memberSubmitting, setMemberSubmitting] = useState(false);
+
   useEffect(() => {
     const raw = localStorage.getItem("bks_user");
     if (!raw) { router.push("/login"); return; }
@@ -334,6 +374,22 @@ export default function ProfilePage() {
     const draft = readDraft();
     if (draft?.bookingNo && draft.passengers && draft.seats) {
       setDraftBooking(draft);
+    }
+
+    const appRaw = localStorage.getItem("bks_member_application");
+    if (appRaw) {
+      const app: MemberApplication = JSON.parse(appRaw);
+      setMemberApp(app);
+      setMemberForm({
+        title: app.title, first_name: app.first_name, last_name: app.last_name,
+        gender: app.gender, birth_date: app.birth_date, nationality: app.nationality,
+        id_card: app.id_card, passport_no: app.passport_no, tel_no: app.tel_no,
+        email: app.email, address: app.address, sub_district: app.sub_district,
+        district: app.district, province: app.province, post_code: app.post_code,
+        person_type_code: app.person_type_code,
+      });
+    } else if (u) {
+      setMemberForm(f => ({ ...f, email: u.email, tel_no: u.phone }));
     }
   }, []);
 
@@ -350,9 +406,49 @@ export default function ProfilePage() {
     router.push("/");
   };
 
+  const handleMemberSubmit = () => {
+    const errs: Record<string, string> = {};
+    if (!memberForm.first_name.trim()) errs.first_name = "กรุณากรอกชื่อ";
+    if (!memberForm.last_name.trim()) errs.last_name = "กรุณากรอกนามสกุล";
+    if (!memberForm.birth_date) errs.birth_date = "กรุณากรอกวันเกิด";
+    if (!memberForm.tel_no.trim()) errs.tel_no = "กรุณากรอกเบอร์โทร";
+    if (!memberForm.email.trim()) errs.email = "กรุณากรอกอีเมล";
+
+    if (memberForm.nationality === "ไทย") {
+      if (!memberForm.id_card.trim()) {
+        errs.id_card = "กรุณากรอกเลขบัตรประชาชน";
+      } else if (!validateThaiId(memberForm.id_card.replace(/-/g, ""))) {
+        errs.id_card = "เลขบัตรประชาชนไม่ถูกต้อง";
+      }
+    } else {
+      if (!memberForm.passport_no.trim()) errs.passport_no = "กรุณากรอกเลขหนังสือเดินทาง";
+    }
+
+    if (memberForm.post_code && !/^\d{5}$/.test(memberForm.post_code)) {
+      errs.post_code = "รหัสไปรษณีย์ต้องเป็นตัวเลข 5 หลัก";
+    }
+
+    setMemberErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setMemberSubmitting(true);
+    const app: MemberApplication = {
+      ...memberForm,
+      approval_status: "pending",
+      submitted_at: new Date().toISOString().split("T")[0],
+    };
+    localStorage.setItem("bks_member_application", JSON.stringify(app));
+    setMemberApp(app);
+    setMemberSubmitting(false);
+  };
+
   if (!user) return null;
 
   const inputCls = "w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82]";
+  const mInputCls = (field: string) =>
+    `w-full border rounded-lg px-3 py-2.5 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-1 focus:ring-[#171b82] ${memberErrors[field] ? "border-[#f04438]" : "border-[#d0d5dd]"}`;
+  const mf = memberForm;
+  const setMf = (k: string, v: string) => setMemberForm(f => ({ ...f, [k]: v }));
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f3f4f6]">
@@ -644,6 +740,253 @@ export default function ProfilePage() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Membership */}
+          {active === "membership" && (
+            <div className="flex flex-col gap-5">
+              <SectionHeader title="สมาชิกสิทธิพิเศษ บขส." subtitle="สมัครสมาชิกเพื่อรับส่วนลดและสิทธิพิเศษ" />
+
+              {/* Status banner if submitted */}
+              {memberApp && (
+                <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${APPROVAL_STATUS_COLORS[memberApp.approval_status].replace("bg-", "bg-").replace("text-", "border-")} bg-opacity-50`}
+                  style={{ backgroundColor: memberApp.approval_status === "approved" ? "#f0fdf4" : memberApp.approval_status === "pending" ? "#fefce8" : "#fff1f0", borderColor: memberApp.approval_status === "approved" ? "#86efac" : memberApp.approval_status === "pending" ? "#fcd34d" : "#fca5a5" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={APPROVAL_STATUS_COLORS[memberApp.approval_status].split(" ")[1]}>
+                    {memberApp.approval_status === "approved" ? <polyline points="20 6 9 17 4 12"/> : <circle cx="12" cy="12" r="10"/>}
+                  </svg>
+                  <div>
+                    <div className={`text-[15px] font-semibold ${APPROVAL_STATUS_COLORS[memberApp.approval_status].split(" ")[1]}`}>
+                      {memberApp.approval_status === "approved" ? `ได้รับการอนุมัติแล้ว${memberApp.member_no ? ` · เลขสมาชิก ${memberApp.member_no}` : ""}` :
+                       memberApp.approval_status === "pending" ? "คำขออยู่ระหว่างการพิจารณา" :
+                       memberApp.approval_status === "rejected" ? "คำขอไม่ผ่านการอนุมัติ" : "สิทธิ์หมดอายุแล้ว"}
+                    </div>
+                    <div className="text-[13px] text-[#667085]">ยื่นเมื่อ {memberIsoToThai(memberApp.submitted_at)}</div>
+                  </div>
+                  {(memberApp.approval_status === "rejected" || memberApp.approval_status === "expired") && (
+                    <button
+                      onClick={() => { setMemberApp(null); localStorage.removeItem("bks_member_application"); }}
+                      className="ml-auto text-[13px] font-semibold text-[#171b82] hover:underline"
+                    >
+                      ยื่นใหม่
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Registration form */}
+              {(!memberApp || memberApp.approval_status === "rejected" || memberApp.approval_status === "expired") && !memberApp && (
+                <form onSubmit={e => { e.preventDefault(); handleMemberSubmit(); }} className="flex flex-col gap-5">
+                  {/* Personal info */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                    <div className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลส่วนตัว</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Title */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">คำนำหน้า <span className="text-[#f04438]">*</span></label>
+                        <select value={mf.title} onChange={e => setMf("title", e.target.value)} className={mInputCls("title")}>
+                          {["นาย", "นาง", "นางสาว", "เด็กชาย", "เด็กหญิง", "ร.ต.อ.", "พ.ต.ท.", "พ.ต.อ.", "นาวาอากาศเอก"].map(t => <option key={t}>{t}</option>)}
+                        </select>
+                      </div>
+                      {/* Gender */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เพศ <span className="text-[#f04438]">*</span></label>
+                        <select value={mf.gender} onChange={e => setMf("gender", e.target.value)} className={mInputCls("gender")}>
+                          <option value="male">ชาย</option>
+                          <option value="female">หญิง</option>
+                          <option value="other">อื่น ๆ</option>
+                        </select>
+                      </div>
+                      {/* First name */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">ชื่อ <span className="text-[#f04438]">*</span></label>
+                        <input value={mf.first_name} onChange={e => setMf("first_name", e.target.value)} className={mInputCls("first_name")} placeholder="ชื่อจริง" />
+                        {memberErrors.first_name && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.first_name}</p>}
+                      </div>
+                      {/* Last name */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">นามสกุล <span className="text-[#f04438]">*</span></label>
+                        <input value={mf.last_name} onChange={e => setMf("last_name", e.target.value)} className={mInputCls("last_name")} placeholder="นามสกุล" />
+                        {memberErrors.last_name && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.last_name}</p>}
+                      </div>
+                      {/* Birth date */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">วันเกิด <span className="text-[#f04438]">*</span></label>
+                        <input type="date" value={mf.birth_date} onChange={e => setMf("birth_date", e.target.value)} className={mInputCls("birth_date")} />
+                        {memberErrors.birth_date && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.birth_date}</p>}
+                      </div>
+                      {/* Nationality */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">สัญชาติ <span className="text-[#f04438]">*</span></label>
+                        <select value={mf.nationality} onChange={e => { setMf("nationality", e.target.value); setMf("id_card", ""); setMf("passport_no", ""); }} className={mInputCls("nationality")}>
+                          <option>ไทย</option>
+                          <option>อเมริกัน</option>
+                          <option>อังกฤษ</option>
+                          <option>ญี่ปุ่น</option>
+                          <option>จีน</option>
+                          <option>เกาหลี</option>
+                          <option>อื่น ๆ</option>
+                        </select>
+                      </div>
+                      {/* ID card (Thai) or passport (non-Thai) */}
+                      {mf.nationality === "ไทย" ? (
+                        <div className="col-span-2">
+                          <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เลขบัตรประชาชน <span className="text-[#f04438]">*</span></label>
+                          <input value={mf.id_card} onChange={e => setMf("id_card", e.target.value.replace(/\D/g, "").slice(0, 13))} className={mInputCls("id_card")} placeholder="13 หลัก" maxLength={13} inputMode="numeric" />
+                          {memberErrors.id_card && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.id_card}</p>}
+                        </div>
+                      ) : (
+                        <div className="col-span-2">
+                          <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เลขหนังสือเดินทาง <span className="text-[#f04438]">*</span></label>
+                          <input value={mf.passport_no} onChange={e => setMf("passport_no", e.target.value)} className={mInputCls("passport_no")} placeholder="Passport Number" />
+                          {memberErrors.passport_no && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.passport_no}</p>}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Contact */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                    <div className="text-[15px] font-semibold text-[#101828] mb-4">ข้อมูลติดต่อ</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เบอร์โทรศัพท์ <span className="text-[#f04438]">*</span></label>
+                        <input value={mf.tel_no} onChange={e => setMf("tel_no", e.target.value)} className={mInputCls("tel_no")} placeholder="0XX-XXX-XXXX" />
+                        {memberErrors.tel_no && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.tel_no}</p>}
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">อีเมล <span className="text-[#f04438]">*</span></label>
+                        <input type="email" value={mf.email} onChange={e => setMf("email", e.target.value)} className={mInputCls("email")} placeholder="email@example.com" />
+                        {memberErrors.email && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.email}</p>}
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">ที่อยู่</label>
+                        <input value={mf.address} onChange={e => setMf("address", e.target.value)} className={mInputCls("address")} placeholder="บ้านเลขที่ ซอย ถนน" />
+                      </div>
+                      {/* Province → District → Sub-district cascade */}
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">จังหวัด</label>
+                        <select
+                          value={mf.province}
+                          onChange={e => { setMf("province", e.target.value); setMf("district", ""); setMf("sub_district", ""); setMf("post_code", ""); }}
+                          className={mInputCls("province")}
+                        >
+                          <option value="">-- เลือกจังหวัด --</option>
+                          {THAI_PROVINCES.map(p => <option key={p.name}>{p.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">เขต/อำเภอ</label>
+                        <select
+                          value={mf.district}
+                          onChange={e => { setMf("district", e.target.value); setMf("sub_district", ""); setMf("post_code", ""); }}
+                          disabled={!mf.province}
+                          className={mInputCls("district") + " disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"}
+                        >
+                          <option value="">-- เลือกเขต/อำเภอ --</option>
+                          {getDistricts(mf.province).map(d => <option key={d.name}>{d.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">แขวง/ตำบล</label>
+                        <select
+                          value={mf.sub_district}
+                          onChange={e => {
+                            setMf("sub_district", e.target.value);
+                            setMf("post_code", getPostCode(mf.province, mf.district, e.target.value));
+                          }}
+                          disabled={!mf.district}
+                          className={mInputCls("sub_district") + " disabled:bg-[#f9fafb] disabled:text-[#9ca3af]"}
+                        >
+                          <option value="">-- เลือกแขวง/ตำบล --</option>
+                          {getSubDistricts(mf.province, mf.district).map(s => <option key={s.name}>{s.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[13px] font-semibold text-[#344054] mb-1.5">รหัสไปรษณีย์</label>
+                        <input
+                          value={mf.post_code}
+                          onChange={e => setMf("post_code", e.target.value.replace(/\D/g, "").slice(0, 5))}
+                          className={mInputCls("post_code")}
+                          placeholder="xxxxx"
+                          maxLength={5}
+                          inputMode="numeric"
+                        />
+                        {memberErrors.post_code && <p className="text-[12px] text-[#f04438] mt-1">{memberErrors.post_code}</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Membership type */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                    <div className="text-[15px] font-semibold text-[#101828] mb-4">ประเภทสมาชิก</div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {PERSON_TYPES.map(pt => (
+                        <button
+                          key={pt.code}
+                          type="button"
+                          onClick={() => setMf("person_type_code", pt.code)}
+                          className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-colors ${
+                            mf.person_type_code === pt.code
+                              ? "border-[#171b82] bg-[#f0f2ff]"
+                              : "border-[#e5e7eb] hover:border-[#d0d5dd]"
+                          }`}
+                        >
+                          <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-0.5 flex items-center justify-center ${mf.person_type_code === pt.code ? "border-[#171b82]" : "border-[#d0d5dd]"}`}>
+                            {mf.person_type_code === pt.code && <div className="w-2.5 h-2.5 rounded-full bg-[#171b82]" />}
+                          </div>
+                          <div>
+                            <div className="text-[14px] font-semibold text-[#101828]">{pt.name_th}</div>
+                            {pt.default_discount > 0 && <div className="text-[12px] text-[#059669] font-medium mt-0.5">ส่วนลด {pt.default_discount}%</div>}
+                            {pt.doc_label && <div className="text-[12px] text-[#9ca3af] mt-0.5">เอกสาร: {pt.doc_label}</div>}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    {PERSON_TYPES.find(p => p.code === mf.person_type_code)?.requires_document && (
+                      <div className="mt-4 flex items-center gap-3 bg-[#f0f2ff] border border-[#c7d2fe] rounded-xl px-4 py-3">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#171b82" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <span className="text-[13px] text-[#171b82] font-medium">
+                          ประเภทนี้ต้องใช้เอกสาร: {PERSON_TYPES.find(p => p.code === mf.person_type_code)?.doc_label} เพื่อประกอบการพิจารณา
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={memberSubmitting}
+                    className="bg-[#171b82] text-white text-[16px] font-semibold py-3.5 rounded-xl hover:bg-[#0f1260] transition-colors disabled:opacity-60"
+                  >
+                    ส่งคำขอสมัครสมาชิก
+                  </button>
+                </form>
+              )}
+
+              {/* Read-only view after submission (pending) */}
+              {memberApp && memberApp.approval_status === "pending" && (
+                <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4">
+                  <div className="text-[15px] font-semibold text-[#101828]">ข้อมูลที่ยื่นไว้</div>
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-[14px]">
+                    {[
+                      ["ชื่อ-นามสกุล", `${memberApp.title}${memberApp.first_name} ${memberApp.last_name}`],
+                      ["เพศ", memberApp.gender === "male" ? "ชาย" : memberApp.gender === "female" ? "หญิง" : "อื่น ๆ"],
+                      ["วันเกิด", memberApp.birth_date ? memberIsoToThai(memberApp.birth_date) : "—"],
+                      ["สัญชาติ", memberApp.nationality],
+                      ["บัตรประชาชน/Passport", memberApp.id_card || memberApp.passport_no || "—"],
+                      ["เบอร์โทร", memberApp.tel_no],
+                      ["อีเมล", memberApp.email],
+                      ["จังหวัด", memberApp.province || "—"],
+                      ["ประเภทสมาชิก", PERSON_TYPES.find(p => p.code === memberApp.person_type_code)?.name_th ?? memberApp.person_type_code],
+                    ].map(([label, value]) => (
+                      <div key={label}>
+                        <div className="text-[12px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-0.5">{label}</div>
+                        <div className="text-[#344054] font-medium">{value}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

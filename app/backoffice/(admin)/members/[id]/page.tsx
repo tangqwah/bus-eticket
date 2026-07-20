@@ -8,14 +8,18 @@ import {
   MEMBER_TYPE_COLORS,
   MEMBER_TYPE_NEEDS_DOC,
   MEMBER_TYPE_HAS_EXPIRY,
-  MEMBER_STATUS_LABELS,
-  MEMBER_STATUS_COLORS,
+  APPROVAL_STATUS_LABELS,
+  APPROVAL_STATUS_COLORS,
+  ACCOUNT_STATUS_LABELS,
+  ACCOUNT_STATUS_COLORS,
+  PERSON_TYPES,
   isoToThai,
   isExpiringSoon,
   daysUntilExpiry,
+  generateMemberNo,
   type Member,
-  type MemberType,
-  type MemberStatus,
+  type ApprovalStatus,
+  type AccountStatus,
   type AuditEntry,
 } from "@/lib/mockMembers";
 
@@ -35,7 +39,7 @@ type DocStyle = {
   avatarStroke: string;
 };
 
-const DOC_STYLES: Partial<Record<MemberType, DocStyle>> = {
+const DOC_STYLES: Record<string, DocStyle> = {
   employee: {
     headerBg: "#171b82",
     orgName: "TRANSPORT CO., LTD.",
@@ -73,8 +77,8 @@ const DOC_STYLES: Partial<Record<MemberType, DocStyle>> = {
   },
 };
 
-function DocPlaceholder({ memberType }: { memberType: MemberType }) {
-  const style = DOC_STYLES[memberType];
+function DocPlaceholder({ personTypeCode, memberName }: { personTypeCode: string; memberName: string }) {
+  const style = DOC_STYLES[personTypeCode];
   if (!style) return null;
   return (
     <div className="rounded-xl overflow-hidden border border-[#e5e7eb] shadow-sm">
@@ -82,8 +86,7 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
         <div className="flex items-center gap-2">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
             <line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
           <span className="text-white text-[13px] font-semibold tracking-wide">{style.orgName}</span>
@@ -100,7 +103,7 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
           </div>
           <div className="flex-1">
             <div className="text-[11px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">{style.cardType}</div>
-            <div className="text-[15px] font-semibold text-[#101828] leading-tight">สมาชิก บขส.</div>
+            <div className="text-[15px] font-semibold text-[#101828] leading-tight">{memberName}</div>
             <div className="text-[12px] text-[#667085] mt-0.5 font-mono">ID: BKS-XXXX-XXXX</div>
             <div className="mt-2 flex flex-col gap-0.5">
               <div className="flex items-center gap-1.5">
@@ -126,8 +129,20 @@ function DocPlaceholder({ memberType }: { memberType: MemberType }) {
   );
 }
 
-const ALL_MEMBER_TYPES: MemberType[] = ["general", "employee", "official", "senior", "student", "disabled"];
-const ALL_MEMBER_STATUSES: MemberStatus[] = ["pending", "approved", "rejected", "expired"];
+function InfoRow({ label, value, mono = false }: { label: string; value?: string | null; mono?: boolean }) {
+  return (
+    <div>
+      <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">{label}</div>
+      <div className={`text-[15px] font-medium text-[#344054] ${mono ? "font-mono" : ""}`}>
+        {value || <span className="text-[#9ca3af]">—</span>}
+      </div>
+    </div>
+  );
+}
+
+const GENDER_LABELS: Record<string, string> = { male: "ชาย", female: "หญิง", other: "อื่น ๆ" };
+const ALL_APPROVAL_STATUSES: ApprovalStatus[] = ["pending", "approved", "rejected", "expired"];
+const ALL_ACCOUNT_STATUSES: AccountStatus[] = ["ACTIVE", "INACTIVE", "SUSPENDED"];
 
 export default function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -149,12 +164,14 @@ export default function MemberDetailPage() {
 
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Edit mode (super_admin only)
+  // Super-admin edit state
   const [editMode, setEditMode] = useState(false);
-  const [editMemberType, setEditMemberType] = useState<MemberType>("general");
-  const [editStatus, setEditStatus] = useState<MemberStatus>("pending");
+  const [editPersonType, setEditPersonType] = useState("general");
+  const [editApprovalStatus, setEditApprovalStatus] = useState<ApprovalStatus>("pending");
+  const [editAccountStatus, setEditAccountStatus] = useState<AccountStatus>("ACTIVE");
   const [editExpiryDate, setEditExpiryDate] = useState("");
   const [editDiscount, setEditDiscount] = useState(0);
+  const [editRemark, setEditRemark] = useState("");
 
   useEffect(() => {
     const base = MOCK_MEMBERS.find(m => m.id === id);
@@ -165,10 +182,12 @@ export default function MemberDetailPage() {
     const merged = { ...base, ...(overrides[id] ?? {}) };
     setMember(merged);
 
-    setEditMemberType(merged.memberType);
-    setEditStatus(merged.status);
-    setEditExpiryDate(merged.expiryDate ?? "");
-    setEditDiscount(merged.discountPercent ?? 0);
+    setEditPersonType(merged.person_type_code);
+    setEditApprovalStatus(merged.approval_status);
+    setEditAccountStatus(merged.status);
+    setEditExpiryDate(merged.expiry_date ?? "");
+    setEditDiscount(merged.discount_percent ?? 0);
+    setEditRemark(merged.remark ?? "");
 
     const logRaw = localStorage.getItem("bks_audit_log");
     const stored: StoredAuditEntry[] = logRaw ? JSON.parse(logRaw) : [];
@@ -176,28 +195,24 @@ export default function MemberDetailPage() {
     setAuditLog([...base.mockAuditLog, ...memberEntries]);
 
     const settingsRaw = localStorage.getItem("bks_discount_settings");
-    const discountDefaults: Partial<Record<MemberType, number>> = {
-      employee: 50,
-      official: 50,
-      senior: 30,
-      student: 30,
-      disabled: 40,
+    const discountDefaults: Record<string, number> = {
+      employee: 50, official: 50, senior: 30, student: 30, disabled: 40,
     };
     if (settingsRaw) {
       const s = JSON.parse(settingsRaw);
       setReminderDays(s.renewalReminderDays ?? 30);
-      const discountByType: Partial<Record<MemberType, number>> = {
+      const byType: Record<string, number> = {
         employee: s.employeeDiscount ?? 50,
         official: s.officialDiscount ?? 50,
         senior: s.seniorDiscount ?? 30,
         student: s.studentDiscount ?? 30,
         disabled: s.disabledDiscount ?? 40,
       };
-      const disc = discountByType[base.memberType] ?? 0;
+      const disc = byType[base.person_type_code] ?? 0;
       setDefaultDiscount(disc);
       setApproveDiscount(disc);
     } else {
-      const disc = discountDefaults[base.memberType] ?? 0;
+      const disc = discountDefaults[base.person_type_code] ?? 0;
       setDefaultDiscount(disc);
       setApproveDiscount(disc);
     }
@@ -237,16 +252,20 @@ export default function MemberDetailPage() {
 
   const handleApprove = () => {
     if (!member) return;
-    const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.memberType];
-    const needsDoc = MEMBER_TYPE_NEEDS_DOC[member.memberType];
+    const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.person_type_code];
+    const needsDoc = MEMBER_TYPE_NEEDS_DOC[member.person_type_code];
+    const today = new Date().toISOString().split("T")[0];
+    const memberNo = member.member_no ?? generateMemberNo(today);
     const patch: Partial<Member> = {
-      status: "approved" as const,
-      approvedAt: new Date().toISOString().split("T")[0],
-      ...(hasExpiry ? { expiryDate: approveExpiryDate } : {}),
-      ...(needsDoc ? { discountPercent: approveDiscount } : {}),
+      approval_status: "approved" as const,
+      status: "ACTIVE" as const,
+      approved_at: today,
+      member_no: memberNo,
+      ...(hasExpiry ? { expiry_date: approveExpiryDate } : {}),
+      ...(needsDoc ? { discount_percent: approveDiscount } : {}),
     };
     patchOverride(patch);
-    let note = "อนุมัติสิทธิ์สมาชิก";
+    let note = `อนุมัติสิทธิ์สมาชิก เลขสมาชิก ${memberNo}`;
     if (needsDoc) note += ` ส่วนลด ${approveDiscount}%`;
     if (hasExpiry) note += ` หมดอายุ ${isoToThai(approveExpiryDate)}`;
     else if (needsDoc) note += " (ไม่มีวันหมดอายุ)";
@@ -259,7 +278,7 @@ export default function MemberDetailPage() {
 
   const handleReject = () => {
     if (!rejectReason.trim()) return;
-    const patch = { status: "rejected" as const, rejectionReason: rejectReason.trim() };
+    const patch = { approval_status: "rejected" as const, rejection_reason: rejectReason.trim() };
     patchOverride(patch);
     addAuditEntry("ไม่อนุมัติ", rejectReason.trim());
     setMember(prev => prev ? { ...prev, ...patch } : null);
@@ -272,22 +291,28 @@ export default function MemberDetailPage() {
   const handleEditSave = () => {
     if (!member) return;
     const changes: string[] = [];
-    if (editMemberType !== member.memberType)
-      changes.push(`ประเภท: ${MEMBER_TYPE_LABELS[member.memberType]} → ${MEMBER_TYPE_LABELS[editMemberType]}`);
-    if (editStatus !== member.status)
-      changes.push(`สถานะ: ${MEMBER_STATUS_LABELS[member.status]} → ${MEMBER_STATUS_LABELS[editStatus]}`);
-    const editHasExpiry = MEMBER_TYPE_HAS_EXPIRY[editMemberType];
-    const editNeedsDoc = MEMBER_TYPE_NEEDS_DOC[editMemberType];
-    if (editHasExpiry && editExpiryDate && editExpiryDate !== (member.expiryDate ?? ""))
+    if (editPersonType !== member.person_type_code)
+      changes.push(`ประเภท: ${MEMBER_TYPE_LABELS[member.person_type_code] ?? member.person_type_code} → ${MEMBER_TYPE_LABELS[editPersonType] ?? editPersonType}`);
+    if (editApprovalStatus !== member.approval_status)
+      changes.push(`สถานะอนุมัติ: ${APPROVAL_STATUS_LABELS[member.approval_status]} → ${APPROVAL_STATUS_LABELS[editApprovalStatus]}`);
+    if (editAccountStatus !== member.status)
+      changes.push(`สถานะบัญชี: ${ACCOUNT_STATUS_LABELS[member.status]} → ${ACCOUNT_STATUS_LABELS[editAccountStatus]}`);
+    const editHasExpiry = MEMBER_TYPE_HAS_EXPIRY[editPersonType];
+    const editNeedsDoc = MEMBER_TYPE_NEEDS_DOC[editPersonType];
+    if (editHasExpiry && editExpiryDate && editExpiryDate !== (member.expiry_date ?? ""))
       changes.push(`วันหมดอายุ: ${isoToThai(editExpiryDate)}`);
-    if (editNeedsDoc && editDiscount !== (member.discountPercent ?? 0))
+    if (editNeedsDoc && editDiscount !== (member.discount_percent ?? 0))
       changes.push(`ส่วนลด: ${editDiscount}%`);
+    if (editRemark !== (member.remark ?? ""))
+      changes.push("แก้ไขหมายเหตุ");
 
     const patch: Partial<Member> = {
-      memberType: editMemberType,
-      status: editStatus,
-      ...(editHasExpiry && editExpiryDate ? { expiryDate: editExpiryDate } : {}),
-      ...(editNeedsDoc ? { discountPercent: editDiscount } : {}),
+      person_type_code: editPersonType,
+      approval_status: editApprovalStatus,
+      status: editAccountStatus,
+      remark: editRemark || undefined,
+      ...(editHasExpiry && editExpiryDate ? { expiry_date: editExpiryDate } : {}),
+      ...(editNeedsDoc ? { discount_percent: editDiscount } : {}),
     };
     patchOverride(patch);
     addAuditEntry(
@@ -302,10 +327,10 @@ export default function MemberDetailPage() {
 
   if (!member) return null;
 
-  const hasDoc = MEMBER_TYPE_NEEDS_DOC[member.memberType];
-  const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.memberType];
-  const canAct = member.status === "pending" || member.status === "rejected";
-  const expiringSoon = member.status === "approved" && isExpiringSoon(member.expiryDate, reminderDays);
+  const hasDoc = MEMBER_TYPE_NEEDS_DOC[member.person_type_code];
+  const hasExpiry = MEMBER_TYPE_HAS_EXPIRY[member.person_type_code];
+  const canAct = member.approval_status === "pending" || member.approval_status === "rejected";
+  const expiringSoon = member.approval_status === "approved" && isExpiringSoon(member.expiry_date, reminderDays);
   const isSuperAdmin = adminRole === "super_admin";
 
   return (
@@ -329,75 +354,112 @@ export default function MemberDetailPage() {
       </div>
 
       {/* Expiry warning */}
-      {expiringSoon && member.expiryDate && (
+      {expiringSoon && member.expiry_date && (
         <div className="flex items-center gap-3 bg-[#fffbeb] border border-[#fcd34d] rounded-xl px-4 py-3">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           <span className="text-[15px] font-semibold text-[#b45309]">
-            สิทธิ์สมาชิกจะหมดอายุในอีก {daysUntilExpiry(member.expiryDate)} วัน ({isoToThai(member.expiryDate)})
+            สิทธิ์สมาชิกจะหมดอายุในอีก {daysUntilExpiry(member.expiry_date)} วัน ({isoToThai(member.expiry_date)})
           </span>
         </div>
       )}
 
       <div className="grid grid-cols-[1fr_340px] gap-5 items-start">
-        {/* Left: Info + edit form + audit log */}
+        {/* Left: Profile + edit form + audit log */}
         <div className="flex flex-col gap-4">
-          {/* Member info card */}
+
+          {/* Member header card */}
           <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
             <div className="flex items-start justify-between mb-5">
               <div>
-                <div className="flex items-center gap-2.5 mb-1">
+                <div className="flex items-center gap-2.5 mb-1 flex-wrap">
                   <h2 className="text-[20px] font-semibold text-[#101828]">{member.name}</h2>
-                  <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[member.memberType]}`}>
-                    {MEMBER_TYPE_LABELS[member.memberType]}
+                  <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[member.person_type_code] ?? "bg-[#f3f4f6] text-[#667085]"}`}>
+                    {MEMBER_TYPE_LABELS[member.person_type_code] ?? member.person_type_code}
                   </span>
+                  {member.member_no && (
+                    <span className="text-[13px] font-mono font-semibold px-2.5 py-1 rounded-full bg-[#f0f2ff] text-[#171b82] whitespace-nowrap">
+                      {member.member_no}
+                    </span>
+                  )}
                 </div>
                 <div className="text-[14px] font-mono text-[#9ca3af]">{member.id}</div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[14px] font-semibold px-3 py-1.5 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[member.status]}`}>
-                  {MEMBER_STATUS_LABELS[member.status]}
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${APPROVAL_STATUS_COLORS[member.approval_status]}`}>
+                  {APPROVAL_STATUS_LABELS[member.approval_status]}
+                </span>
+                <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${ACCOUNT_STATUS_COLORS[member.status]}`}>
+                  {ACCOUNT_STATUS_LABELS[member.status]}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-              {[
-                { label: "อีเมล", value: member.email },
-                { label: "เบอร์โทรศัพท์", value: member.phone },
-                { label: "วันที่สมัคร", value: isoToThai(member.submittedAt) },
-                { label: "เอกสาร", value: member.documentLabel ?? "ไม่ต้องใช้เอกสาร" },
-              ].map(f => (
-                <div key={f.label}>
-                  <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">{f.label}</div>
-                  <div className="text-[15px] font-medium text-[#344054]">{f.value}</div>
-                </div>
-              ))}
-              {member.status === "approved" && (
-                <>
-                  <div>
-                    <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">วันที่อนุมัติ</div>
-                    <div className="text-[15px] font-medium text-[#344054]">{member.approvedAt ? isoToThai(member.approvedAt) : "—"}</div>
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">วันหมดอายุ</div>
-                    <div className={`text-[15px] font-medium ${expiringSoon ? "text-[#b45309] font-semibold" : "text-[#344054]"}`}>
-                      {member.expiryDate ? isoToThai(member.expiryDate) : "ไม่มีวันหมดอายุ"}
-                    </div>
-                  </div>
-                  {member.discountPercent != null && (
+            {/* Personal info grid */}
+            <div className="mb-5">
+              <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-3">ข้อมูลส่วนตัว</div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <InfoRow label="เพศ" value={GENDER_LABELS[member.gender] ?? member.gender} />
+                <InfoRow label="วันเกิด" value={member.birth_date ? isoToThai(member.birth_date) : null} />
+                <InfoRow label="สัญชาติ" value={member.nationality} />
+                <InfoRow label="เลขบัตรประชาชน" value={member.id_card} mono />
+                {member.passport_no && <InfoRow label="เลขหนังสือเดินทาง" value={member.passport_no} mono />}
+              </div>
+            </div>
+
+            {/* Contact info */}
+            <div className="mb-5 pt-4 border-t border-[#f3f4f6]">
+              <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-3">ข้อมูลติดต่อ</div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <InfoRow label="เบอร์โทรศัพท์" value={member.tel_no} />
+                <InfoRow label="อีเมล" value={member.email} />
+                {member.address && <InfoRow label="ที่อยู่" value={member.address} />}
+                {(member.sub_district || member.district) && (
+                  <InfoRow
+                    label="แขวง/ตำบล · เขต/อำเภอ"
+                    value={[member.sub_district, member.district].filter(Boolean).join(" · ")}
+                  />
+                )}
+                {member.province && <InfoRow label="จังหวัด" value={member.province} />}
+                {member.post_code && <InfoRow label="รหัสไปรษณีย์" value={member.post_code} mono />}
+              </div>
+            </div>
+
+            {/* Membership info */}
+            <div className="pt-4 border-t border-[#f3f4f6]">
+              <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-3">ข้อมูลสมาชิก</div>
+              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <InfoRow label="วันที่สมัคร" value={isoToThai(member.register_date)} />
+                <InfoRow label="เอกสาร" value={member.document_label ?? "ไม่ต้องใช้เอกสาร"} />
+                {member.approval_status === "approved" && (
+                  <>
+                    <InfoRow label="วันที่อนุมัติ" value={member.approved_at ? isoToThai(member.approved_at) : null} />
                     <div>
-                      <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">ส่วนลด</div>
-                      <div className="text-[22px] font-semibold text-[#059669]">{member.discountPercent}%</div>
+                      <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">วันหมดอายุ</div>
+                      <div className={`text-[15px] font-medium ${expiringSoon ? "text-[#b45309] font-semibold" : "text-[#344054]"}`}>
+                        {member.expiry_date ? isoToThai(member.expiry_date) : "ไม่มีวันหมดอายุ"}
+                      </div>
                     </div>
-                  )}
-                </>
-              )}
-              {member.status === "rejected" && member.rejectionReason && (
-                <div className="col-span-2">
-                  <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">เหตุผลที่ไม่อนุมัติ</div>
-                  <div className="text-[15px] text-[#dc2626] bg-[#fff1f0] rounded-lg px-3 py-2.5 border border-[#fecaca]">{member.rejectionReason}</div>
-                </div>
-              )}
+                    {member.discount_percent != null && (
+                      <div>
+                        <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">ส่วนลด</div>
+                        <div className="text-[22px] font-semibold text-[#059669]">{member.discount_percent}%</div>
+                      </div>
+                    )}
+                  </>
+                )}
+                {member.approval_status === "rejected" && member.rejection_reason && (
+                  <div className="col-span-2">
+                    <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">เหตุผลที่ไม่อนุมัติ</div>
+                    <div className="text-[15px] text-[#dc2626] bg-[#fff1f0] rounded-lg px-3 py-2.5 border border-[#fecaca]">{member.rejection_reason}</div>
+                  </div>
+                )}
+                {member.remark && (
+                  <div className="col-span-2">
+                    <div className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider mb-1">หมายเหตุ</div>
+                    <div className="text-[15px] text-[#344054] bg-[#f9fafb] rounded-lg px-3 py-2.5 border border-[#f3f4f6]">{member.remark}</div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Approve/Reject actions */}
@@ -436,10 +498,12 @@ export default function MemberDetailPage() {
                 <button
                   onClick={() => {
                     if (editMode) {
-                      setEditMemberType(member.memberType);
-                      setEditStatus(member.status);
-                      setEditExpiryDate(member.expiryDate ?? "");
-                      setEditDiscount(member.discountPercent ?? 0);
+                      setEditPersonType(member.person_type_code);
+                      setEditApprovalStatus(member.approval_status);
+                      setEditAccountStatus(member.status);
+                      setEditExpiryDate(member.expiry_date ?? "");
+                      setEditDiscount(member.discount_percent ?? 0);
+                      setEditRemark(member.remark ?? "");
                     }
                     setEditMode(m => !m);
                   }}
@@ -459,41 +523,55 @@ export default function MemberDetailPage() {
 
               {editMode && (
                 <div className="p-5 flex flex-col gap-4">
-                  {/* Member type */}
+                  {/* Person type */}
                   <div>
                     <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">ประเภทสมาชิก</label>
                     <select
-                      value={editMemberType}
+                      value={editPersonType}
                       onChange={e => {
-                        const t = e.target.value as MemberType;
-                        setEditMemberType(t);
+                        const t = e.target.value;
+                        setEditPersonType(t);
                         if (!MEMBER_TYPE_HAS_EXPIRY[t]) setEditExpiryDate("");
                         if (!MEMBER_TYPE_NEEDS_DOC[t]) setEditDiscount(0);
                       }}
                       className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 bg-white"
                     >
-                      {ALL_MEMBER_TYPES.map(t => (
-                        <option key={t} value={t}>{MEMBER_TYPE_LABELS[t]}</option>
+                      {PERSON_TYPES.map(p => (
+                        <option key={p.code} value={p.code}>{p.name_th}</option>
                       ))}
                     </select>
                   </div>
 
-                  {/* Status */}
+                  {/* Approval status */}
                   <div>
-                    <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">สถานะ</label>
+                    <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">สถานะอนุมัติ</label>
                     <select
-                      value={editStatus}
-                      onChange={e => setEditStatus(e.target.value as MemberStatus)}
+                      value={editApprovalStatus}
+                      onChange={e => setEditApprovalStatus(e.target.value as ApprovalStatus)}
                       className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 bg-white"
                     >
-                      {ALL_MEMBER_STATUSES.map(s => (
-                        <option key={s} value={s}>{MEMBER_STATUS_LABELS[s]}</option>
+                      {ALL_APPROVAL_STATUSES.map(s => (
+                        <option key={s} value={s}>{APPROVAL_STATUS_LABELS[s]}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Account status */}
+                  <div>
+                    <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">สถานะบัญชี</label>
+                    <select
+                      value={editAccountStatus}
+                      onChange={e => setEditAccountStatus(e.target.value as AccountStatus)}
+                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2 text-[15px] text-[#101828] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 bg-white"
+                    >
+                      {ALL_ACCOUNT_STATUSES.map(s => (
+                        <option key={s} value={s}>{ACCOUNT_STATUS_LABELS[s]}</option>
                       ))}
                     </select>
                   </div>
 
                   {/* Expiry date */}
-                  {MEMBER_TYPE_HAS_EXPIRY[editMemberType] && (
+                  {MEMBER_TYPE_HAS_EXPIRY[editPersonType] && (
                     <div>
                       <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">วันหมดอายุ</label>
                       <input
@@ -506,24 +584,18 @@ export default function MemberDetailPage() {
                   )}
 
                   {/* Discount */}
-                  {MEMBER_TYPE_NEEDS_DOC[editMemberType] && (
+                  {MEMBER_TYPE_NEEDS_DOC[editPersonType] && (
                     <div>
                       <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">ส่วนลด (%)</label>
                       <div className="flex items-center gap-3">
                         <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          value={editDiscount}
+                          type="range" min={0} max={100} value={editDiscount}
                           onChange={e => setEditDiscount(Number(e.target.value))}
                           className="flex-1 accent-[#171b82]"
                         />
                         <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20 focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82]">
                           <input
-                            type="number"
-                            min={0}
-                            max={100}
-                            value={editDiscount}
+                            type="number" min={0} max={100} value={editDiscount}
                             onChange={e => setEditDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
                             className="w-full px-2 py-2 text-[15px] text-center text-[#101828] outline-none"
                           />
@@ -533,13 +605,27 @@ export default function MemberDetailPage() {
                     </div>
                   )}
 
+                  {/* Remark */}
+                  <div>
+                    <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">หมายเหตุ</label>
+                    <textarea
+                      value={editRemark}
+                      onChange={e => setEditRemark(e.target.value)}
+                      placeholder="หมายเหตุสำหรับแอดมิน..."
+                      rows={2}
+                      className="w-full border border-[#d0d5dd] rounded-lg px-3 py-2.5 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none focus:border-[#171b82] focus:ring-2 focus:ring-[#171b82]/10 resize-none"
+                    />
+                  </div>
+
                   <div className="flex gap-3 pt-1">
                     <button
                       onClick={() => {
-                        setEditMemberType(member.memberType);
-                        setEditStatus(member.status);
-                        setEditExpiryDate(member.expiryDate ?? "");
-                        setEditDiscount(member.discountPercent ?? 0);
+                        setEditPersonType(member.person_type_code);
+                        setEditApprovalStatus(member.approval_status);
+                        setEditAccountStatus(member.status);
+                        setEditExpiryDate(member.expiry_date ?? "");
+                        setEditDiscount(member.discount_percent ?? 0);
+                        setEditRemark(member.remark ?? "");
                         setEditMode(false);
                       }}
                       className="flex-1 border border-[#d0d5dd] text-[15px] font-semibold text-[#344054] py-2.5 rounded-xl hover:bg-[#f9fafb] transition-colors"
@@ -597,8 +683,8 @@ export default function MemberDetailPage() {
         {hasDoc && (
           <div className="flex flex-col gap-4">
             <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-              <div className="text-[15px] font-semibold text-[#101828] mb-3">{member.documentLabel}</div>
-              <DocPlaceholder memberType={member.memberType} />
+              <div className="text-[15px] font-semibold text-[#101828] mb-3">{member.document_label}</div>
+              <DocPlaceholder personTypeCode={member.person_type_code} memberName={member.name} />
               <p className="text-[13px] text-[#9ca3af] text-center mt-3">ตัวอย่างเอกสารที่สมาชิกอัปโหลด</p>
             </div>
           </div>
@@ -633,32 +719,24 @@ export default function MemberDetailPage() {
                   />
                 </div>
               )}
-
               {!hasExpiry && hasDoc && (
                 <div className="flex items-center gap-2 bg-[#f0fdf4] border border-[#86efac] rounded-lg px-3 py-2.5">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                   <span className="text-[14px] text-[#15803d] font-medium">สิทธิ์ประเภทนี้ไม่มีวันหมดอายุ</span>
                 </div>
               )}
-
               {hasDoc && (
                 <div>
                   <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">ส่วนลด (%)</label>
                   <div className="flex items-center gap-3">
                     <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={approveDiscount}
+                      type="range" min={0} max={100} value={approveDiscount}
                       onChange={e => setApproveDiscount(Number(e.target.value))}
                       className="flex-1 accent-[#171b82]"
                     />
                     <div className="flex items-center border border-[#d0d5dd] rounded-lg overflow-hidden w-20 focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82]">
                       <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={approveDiscount}
+                        type="number" min={0} max={100} value={approveDiscount}
                         onChange={e => setApproveDiscount(Math.min(100, Math.max(0, Number(e.target.value))))}
                         className="w-full px-2 py-2 text-[15px] text-center text-[#101828] outline-none"
                       />
@@ -701,7 +779,6 @@ export default function MemberDetailPage() {
                 <div className="text-[14px] text-[#667085]">{member.name}</div>
               </div>
             </div>
-
             <div>
               <label className="block text-[14px] font-semibold text-[#344054] mb-1.5">
                 เหตุผล <span className="text-[#dc2626]">*</span>
@@ -717,7 +794,6 @@ export default function MemberDetailPage() {
                 <p className="text-[13px] text-[#9ca3af] mt-1">กรุณาระบุเหตุผลก่อนดำเนินการ</p>
               )}
             </div>
-
             <div className="flex gap-3 mt-5">
               <button
                 onClick={() => setShowRejectModal(false)}

@@ -5,29 +5,27 @@ import {
   MOCK_MEMBERS,
   MEMBER_TYPE_LABELS,
   MEMBER_TYPE_COLORS,
-  MEMBER_STATUS_LABELS,
-  MEMBER_STATUS_COLORS,
+  APPROVAL_STATUS_LABELS,
+  APPROVAL_STATUS_COLORS,
+  ACCOUNT_STATUS_LABELS,
+  ACCOUNT_STATUS_COLORS,
+  PERSON_TYPES,
   isoToThai,
   isExpiringSoon,
   daysUntilExpiry,
   type Member,
-  type MemberType,
-  type MemberStatus,
+  type ApprovalStatus,
+  type AccountStatus,
 } from "@/lib/mockMembers";
 
-type Override = Partial<Pick<Member, "status" | "approvedAt" | "expiryDate" | "discountPercent" | "rejectionReason">>;
+type Override = Partial<Pick<Member, "approval_status" | "approved_at" | "expiry_date" | "discount_percent" | "rejection_reason" | "status" | "member_no">>;
 
-const TYPE_FILTER_TABS: { key: MemberType | "all"; label: string }[] = [
+const TYPE_FILTER_TABS = [
   { key: "all", label: "ทั้งหมด" },
-  { key: "general", label: "ผู้ใช้ทั่วไป" },
-  { key: "employee", label: "พนักงาน บขส." },
-  { key: "official", label: "ข้าราชการ/ทหาร" },
-  { key: "senior", label: "ผู้สูงอายุ" },
-  { key: "student", label: "นักเรียน/นักศึกษา" },
-  { key: "disabled", label: "ผู้พิการ" },
+  ...PERSON_TYPES.map(p => ({ key: p.code, label: p.name_th })),
 ];
 
-const STATUS_FILTER_TABS: { key: MemberStatus | "all"; label: string }[] = [
+const APPROVAL_FILTER_TABS: { key: ApprovalStatus | "all"; label: string }[] = [
   { key: "all", label: "ทั้งหมด" },
   { key: "pending", label: "รอตรวจสอบ" },
   { key: "approved", label: "อนุมัติแล้ว" },
@@ -35,11 +33,19 @@ const STATUS_FILTER_TABS: { key: MemberStatus | "all"; label: string }[] = [
   { key: "expired", label: "หมดอายุ" },
 ];
 
+const ACCOUNT_FILTER_TABS: { key: AccountStatus | "all"; label: string }[] = [
+  { key: "all", label: "ทั้งหมด" },
+  { key: "ACTIVE", label: "ใช้งานได้" },
+  { key: "INACTIVE", label: "ปิดใช้งาน" },
+  { key: "SUSPENDED", label: "ระงับ" },
+];
+
 export default function MembersPage() {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] = useState<MemberType | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<MemberStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [approvalFilter, setApprovalFilter] = useState<ApprovalStatus | "all">("all");
+  const [accountFilter, setAccountFilter] = useState<AccountStatus | "all">("all");
   const [overrides, setOverrides] = useState<Record<string, Override>>({});
   const [reminderDays, setReminderDays] = useState(30);
 
@@ -59,27 +65,38 @@ export default function MembersPage() {
   });
 
   const filtered = members.filter(m => {
-    if (typeFilter !== "all" && m.memberType !== typeFilter) return false;
-    if (statusFilter !== "all" && m.status !== statusFilter) return false;
+    if (typeFilter !== "all" && m.person_type_code !== typeFilter) return false;
+    if (approvalFilter !== "all" && m.approval_status !== approvalFilter) return false;
+    if (accountFilter !== "all" && m.status !== accountFilter) return false;
     const q = search.toLowerCase();
-    return !q || m.name.includes(q) || m.email.toLowerCase().includes(q) || m.phone.includes(q) || m.id.toLowerCase().includes(q);
+    return (
+      !q ||
+      m.name.includes(q) ||
+      m.email.toLowerCase().includes(q) ||
+      m.tel_no.includes(q) ||
+      m.id.toLowerCase().includes(q) ||
+      (m.member_no ?? "").toLowerCase().includes(q)
+    );
   });
 
-  const pendingCount = members.filter(m => m.status === "pending").length;
-  const expiringSoon = members.filter(m => m.status === "approved" && isExpiringSoon(m.expiryDate, reminderDays));
+  const pendingCount = members.filter(m => m.approval_status === "pending").length;
+  const expiringSoon = members.filter(m => m.approval_status === "approved" && isExpiringSoon(m.expiry_date, reminderDays));
 
   const exportCSV = () => {
-    const headers = ["รหัส", "ชื่อ-นามสกุล", "อีเมล", "เบอร์โทร", "ประเภทสมาชิก", "สถานะ", "วันหมดอายุ", "ส่วนลด%", "วันที่สมัคร"];
+    const headers = ["รหัสสมาชิก", "เลขสมาชิก", "ชื่อ-นามสกุล", "อีเมล", "เบอร์โทร", "สัญชาติ", "ประเภทสมาชิก", "สถานะอนุมัติ", "สถานะบัญชี", "วันหมดอายุ", "ส่วนลด%", "วันที่สมัคร"];
     const rows = filtered.map(m => [
       m.id,
+      m.member_no ?? "-",
       m.name,
       m.email,
-      m.phone,
-      MEMBER_TYPE_LABELS[m.memberType],
-      MEMBER_STATUS_LABELS[m.status],
-      m.expiryDate ? isoToThai(m.expiryDate) : "-",
-      m.discountPercent != null ? `${m.discountPercent}%` : "-",
-      isoToThai(m.submittedAt),
+      m.tel_no,
+      m.nationality,
+      MEMBER_TYPE_LABELS[m.person_type_code] ?? m.person_type_code,
+      APPROVAL_STATUS_LABELS[m.approval_status],
+      ACCOUNT_STATUS_LABELS[m.status],
+      m.expiry_date ? isoToThai(m.expiry_date) : "-",
+      m.discount_percent != null ? `${m.discount_percent}%` : "-",
+      isoToThai(m.register_date),
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
@@ -112,9 +129,9 @@ export default function MembersPage() {
                   >
                     {m.name}
                   </button>
-                  {m.expiryDate && (
+                  {m.expiry_date && (
                     <span className="text-[#b45309]">
-                      {" "}(เหลือ {daysUntilExpiry(m.expiryDate)} วัน)
+                      {" "}(เหลือ {daysUntilExpiry(m.expiry_date)} วัน)
                     </span>
                   )}
                   {i < expiringSoon.length - 1 && ", "}
@@ -155,13 +172,12 @@ export default function MembersPage() {
       {/* Filter bar */}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4 flex flex-col gap-3">
         <div className="flex items-center gap-4">
-          {/* Search */}
           <div className="flex items-center gap-2 border border-[#d0d5dd] rounded-lg px-3 py-2 flex-1 max-w-sm focus-within:border-[#171b82] focus-within:ring-1 focus-within:ring-[#171b82] transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="ค้นหา ชื่อ, อีเมล, เบอร์โทร..."
+              placeholder="ค้นหา ชื่อ, เลขสมาชิก, อีเมล, เบอร์โทร..."
               className="flex-1 text-[15px] text-[#101828] placeholder:text-[#9ca3af] outline-none"
             />
             {search && (
@@ -185,9 +201,9 @@ export default function MembersPage() {
         {/* Type filter */}
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">ประเภท</span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             {TYPE_FILTER_TABS.map(tab => {
-              const count = tab.key === "all" ? members.length : members.filter(m => m.memberType === tab.key).length;
+              const count = tab.key === "all" ? members.length : members.filter(m => m.person_type_code === tab.key).length;
               return (
                 <button
                   key={tab.key}
@@ -206,22 +222,46 @@ export default function MembersPage() {
           </div>
         </div>
 
-        {/* Status filter */}
+        {/* Approval status filter */}
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">สถานะ</span>
+          <span className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">อนุมัติ</span>
           <div className="flex items-center gap-1">
-            {STATUS_FILTER_TABS.map(tab => {
+            {APPROVAL_FILTER_TABS.map(tab => {
+              const count = tab.key === "all" ? members.length : members.filter(m => m.approval_status === tab.key).length;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setApprovalFilter(tab.key)}
+                  className={`flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+                    approvalFilter === tab.key ? "bg-[#0f1260] text-white" : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
+                  }`}
+                >
+                  {tab.label}
+                  <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded-full ${approvalFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Account status filter */}
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-semibold text-[#9ca3af] uppercase tracking-wider w-20 shrink-0">บัญชี</span>
+          <div className="flex items-center gap-1">
+            {ACCOUNT_FILTER_TABS.map(tab => {
               const count = tab.key === "all" ? members.length : members.filter(m => m.status === tab.key).length;
               return (
                 <button
                   key={tab.key}
-                  onClick={() => setStatusFilter(tab.key)}
+                  onClick={() => setAccountFilter(tab.key)}
                   className={`flex items-center gap-1.5 text-[14px] font-semibold px-3 py-1.5 rounded-lg transition-colors ${
-                    statusFilter === tab.key ? "bg-[#0f1260] text-white" : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
+                    accountFilter === tab.key ? "bg-[#0f1260] text-white" : "text-[#667085] hover:bg-[#f3f4f6] hover:text-[#344054]"
                   }`}
                 >
                   {tab.label}
-                  <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded-full ${statusFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
+                  <span className={`text-[12px] font-semibold px-1.5 py-0.5 rounded-full ${accountFilter === tab.key ? "bg-white/20" : "bg-[#f3f4f6]"}`}>
                     {count}
                   </span>
                 </button>
@@ -236,7 +276,7 @@ export default function MembersPage() {
         <table className="w-full text-[15px]">
           <thead>
             <tr className="border-b border-[#f3f4f6]">
-              {["รหัสสมาชิก", "ชื่อ-นามสกุล", "ประเภทสมาชิก", "สถานะ", "วันหมดอายุ", "ส่วนลด", "วันที่สมัคร", ""].map(h => (
+              {["เลขสมาชิก", "ชื่อ-นามสกุล", "สัญชาติ", "ประเภทสมาชิก", "สถานะอนุมัติ", "สถานะบัญชี", "วันหมดอายุ", "ส่วนลด", "วันที่สมัคร", ""].map(h => (
                 <th key={h} className="text-left px-5 py-3 text-[13px] font-semibold text-[#667085] uppercase tracking-wider whitespace-nowrap">{h}</th>
               ))}
             </tr>
@@ -244,39 +284,51 @@ export default function MembersPage() {
           <tbody className="divide-y divide-[#f9fafb]">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-5 py-12 text-center text-[16px] text-[#9ca3af]">ไม่พบสมาชิก</td>
+                <td colSpan={10} className="px-5 py-12 text-center text-[16px] text-[#9ca3af]">ไม่พบสมาชิก</td>
               </tr>
             ) : filtered.map(m => {
-              const soon = m.status === "approved" && isExpiringSoon(m.expiryDate, reminderDays);
+              const soon = m.approval_status === "approved" && isExpiringSoon(m.expiry_date, reminderDays);
               return (
                 <tr
                   key={m.id}
                   onClick={() => router.push(`/backoffice/members/${m.id}`)}
                   className="hover:bg-[#f9fafb] transition-colors cursor-pointer"
                 >
-                  <td className="px-5 py-3.5 font-mono text-[14px] font-semibold text-[#344054] whitespace-nowrap">{m.id}</td>
+                  <td className="px-5 py-3.5 whitespace-nowrap">
+                    {m.member_no ? (
+                      <span className="font-mono text-[14px] font-semibold text-[#171b82]">{m.member_no}</span>
+                    ) : (
+                      <span className="text-[13px] text-[#9ca3af] font-mono">{m.id}</span>
+                    )}
+                  </td>
                   <td className="px-5 py-3.5">
                     <div className="font-semibold text-[#101828]">{m.name}</div>
                     <div className="text-[13px] text-[#9ca3af] mt-0.5">{m.email}</div>
                   </td>
+                  <td className="px-5 py-3.5 text-[14px] text-[#667085] whitespace-nowrap">{m.nationality}</td>
                   <td className="px-5 py-3.5">
-                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.memberType]}`}>
-                      {MEMBER_TYPE_LABELS[m.memberType]}
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_TYPE_COLORS[m.person_type_code] ?? "bg-[#f3f4f6] text-[#667085]"}`}>
+                      {MEMBER_TYPE_LABELS[m.person_type_code] ?? m.person_type_code}
                     </span>
                   </td>
                   <td className="px-5 py-3.5">
-                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${MEMBER_STATUS_COLORS[m.status]}`}>
-                      {MEMBER_STATUS_LABELS[m.status]}
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${APPROVAL_STATUS_COLORS[m.approval_status]}`}>
+                      {APPROVAL_STATUS_LABELS[m.approval_status]}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <span className={`text-[13px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap ${ACCOUNT_STATUS_COLORS[m.status]}`}>
+                      {ACCOUNT_STATUS_LABELS[m.status]}
                     </span>
                   </td>
                   <td className="px-5 py-3.5 whitespace-nowrap">
-                    {m.expiryDate ? (
+                    {m.expiry_date ? (
                       <div className={soon ? "text-[#b45309] font-semibold" : "text-[#667085]"}>
-                        {isoToThai(m.expiryDate)}
+                        {isoToThai(m.expiry_date)}
                         {soon && (
                           <div className="text-[12px] font-semibold text-[#b45309] mt-0.5 flex items-center gap-1">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="#b45309"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                            เหลือ {daysUntilExpiry(m.expiryDate)} วัน
+                            เหลือ {daysUntilExpiry(m.expiry_date)} วัน
                           </div>
                         )}
                       </div>
@@ -285,13 +337,13 @@ export default function MembersPage() {
                     )}
                   </td>
                   <td className="px-5 py-3.5">
-                    {m.discountPercent != null ? (
-                      <span className="font-semibold text-[#059669]">{m.discountPercent}%</span>
+                    {m.discount_percent != null ? (
+                      <span className="font-semibold text-[#059669]">{m.discount_percent}%</span>
                     ) : (
                       <span className="text-[#9ca3af]">—</span>
                     )}
                   </td>
-                  <td className="px-5 py-3.5 text-[#667085] whitespace-nowrap">{isoToThai(m.submittedAt)}</td>
+                  <td className="px-5 py-3.5 text-[#667085] whitespace-nowrap">{isoToThai(m.register_date)}</td>
                   <td className="px-5 py-3.5">
                     <button
                       onClick={e => { e.stopPropagation(); router.push(`/backoffice/members/${m.id}`); }}
